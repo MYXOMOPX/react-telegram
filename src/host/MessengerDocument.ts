@@ -1,11 +1,11 @@
-import {MessengerDocument, MessengerHostNode, NodeMessage} from "./node/nodes";
+import {MessengerDocument, Element, MessageElement, RawTextNode} from "./node/nodes";
 
 
 
 
 export const createMessageDocument = (): MessengerDocument => {
 
-    let message: NodeMessage|undefined = undefined;
+    let message: MessageElement|undefined = undefined;
 
     let document: MessengerDocument;
 
@@ -13,14 +13,14 @@ export const createMessageDocument = (): MessengerDocument => {
         console.log(message);
     }
 
-    const createElement = (type: string, props: any): MessengerHostNode => {
-        const node: MessengerHostNode = {
+    const createElement = (type: string, data: any): Element => {
+        const node: Element = {
             nodeName: type,
             children: [],
-            props: props,
+            data,
             $document: document,
             updateElement: (newProps) => {
-                node.props = newProps;
+                node.data = newProps;
                 queueRerender();
             },
             appendChild: (child) => {
@@ -33,6 +33,16 @@ export const createMessageDocument = (): MessengerDocument => {
             }
         }
         return node;
+    }
+
+    const createTextNode = (value: string): RawTextNode => {
+        return {
+            nodeName: "rawtext",
+            $document: document,
+            data,
+            children: [],
+
+        }
     }
 
     const setMessage = (node) => {
