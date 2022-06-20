@@ -1,12 +1,12 @@
-import {ElementDummy, ElementRules} from "./type";
+import {RTElement, RTElementRules} from "./type";
 
-export type MessageRootElementDummy = ElementDummy<"messageRootElement", {
+export type MessageRootElementDummy = RTElement<"messageRootElement", {
     uuid: string;
     chatId: string;
     messageId?: string;
 }>
 
-export const messageRootElementRules: ElementRules = {
+export const messageRootElementRules: RTElementRules = {
     denyRawText: true,
     allowedInNodes: [],
 }

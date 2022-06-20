@@ -1,6 +1,8 @@
 // import {MessengerDocument, NodeRoot} from "../nodes";
 
-export type TypeOfNode = "rawText" | "element"
-export interface SimpleNode<T extends TypeOfNode = "element"> {
+export type RTNodeType = "rawText" | "element"
+export interface RTNode<T extends RTNodeType = "element"> {
     type: T;
+    $document: any; // CHANGE
+    $root: RTNode;
 }

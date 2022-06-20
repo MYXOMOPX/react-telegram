@@ -1,9 +1,9 @@
-import {ElementDummy, ElementRules } from "./type";
+import {RTElement, RTElementRules } from "./type";
 
-export type FormatElementDummy = ElementDummy<"formatElement", {
+export type FormatElementDummy = RTElement<"formatElement", {
     bold?: boolean;
     italic?: boolean;
     underline?: boolean;
 }>
 
-export const formatElementRules: ElementRules = {} // DEFAULT
+export const formatElementRules: RTElementRules = {} // DEFAULT
