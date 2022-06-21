@@ -1,6 +1,6 @@
 import {RTElementRules, MessageType, RTElement} from "./type";
 
-export type MessageElementDummy = RTElement<"messageElement", {
+export type RTMessageElement = RTElement<"message", {
     type: MessageType
 }>
 

@@ -1,6 +1,6 @@
 import {RTElement, RTElementRules} from "./type";
 
-export type MessageRootElementDummy = RTElement<"messageRootElement", {
+export type RTMessageRootElement = RTElement<"message-root", {
     uuid: string;
     chatId: string;
     messageId?: string;

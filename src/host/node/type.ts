@@ -1,8 +1,9 @@
-// import {MessengerDocument, NodeRoot} from "../nodes";
+import { RTElement } from "./element";
+import type { RTDocument } from "../document/type";
 
 export type RTNodeType = "rawText" | "element"
-export interface RTNode<T extends RTNodeType = "element"> {
+export interface RTNode<T extends RTNodeType = RTNodeType> {
     type: T;
-    $document: any; // CHANGE
-    $root: RTNode;
+    $document: RTDocument; // CHANGE
+    $root: RTElement;
 }

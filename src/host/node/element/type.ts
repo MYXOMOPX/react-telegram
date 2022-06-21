@@ -1,10 +1,5 @@
 import {RTNode} from "../type";
 
-export interface ElementDummy<T extends  string = string, Data = any> extends RTNode<"element">{
-    elementName: T;
-    data?: Data;
-}
-
 export interface RTElement<T extends  string = string, Data = any> extends RTNode<"element"> {
     elementName: T;
     data?: Data;
@@ -12,6 +7,7 @@ export interface RTElement<T extends  string = string, Data = any> extends RTNod
     children: Array<RTNode>;
     updateElement: (data: Partial<Data>) => void;
     appendChild: (node: RTNode) => void;
+    insertBefore: (node: RTNode, beforeNode: RTNode) => void;
     removeChild: (node: RTNode) => void;
 }
 

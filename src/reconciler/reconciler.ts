@@ -1,10 +1,174 @@
+import React from 'react';
+import Reconciler from 'react-reconciler';
+import {createRTDocument} from "../host/document/RTDocument";
+import {ReconcilerRTHostConfig} from "./type";
+import { inspect } from 'util' // or directly
 
-// document === MessengerDocument
-// <div id="react"/> = <root/>
-// first <element /> = <message-settings/>
+export const createReactTelegram = () => {
+    const rtDocument = createRTDocument();
 
-// In this case
+    const hostConfig: ReconcilerRTHostConfig = {
+        // Среда поддерживает мутацию нод
+        supportsMutation: true,
 
-// MessengerDocument - global for bot
-// <root> - is for handling some message. It has attributes - chatId, messagemeta etc.
-// <message-settings> - is a content
+        /*
+         * Нужно ли обрабатывать вложенное содержимое как текст?
+         * Вызывается во время рендер-фазы
+         *
+         * true: на следующем шаге будет создано представление узла
+         * и дальнейший обход вложенного поддерева осуществляться не будет
+         * false: рекурсивная обработка поддерева продолжается
+         * */
+        shouldSetTextContent: (type, data) => {
+            return false
+        },
+
+        /*
+         * Сопоставляет хост-компонент с конкретным инстансом в среде
+         * и обрабатывает первоначальные пропсы. Вызывается на всех нодах,
+         * кроме текстовых листьев во время рендер-фазы
+         *
+         * Возвращает созданный инстанс
+         * */
+        createInstance(type: string, data: any, rootContainerInstance) {
+            const node = rtDocument.createElement(rootContainerInstance, type, data);
+
+            return node;
+        },
+
+        /*
+         * Создает представление для текстового листа в среде
+         * Вызывается исключительно на текстовых листьях во время рендер-фазы
+         *
+         * Возвращает созданный текстовый инстанс
+         * */
+        createTextInstance(text, rootContainer) {
+            return rtDocument.createTextNode(rootContainer, text);
+        },
+
+        /*
+         * Присоединяет ребенка к родителю
+         * Вызывается на каждом ребенке, если родитель еще не отрисован на экране
+         * (т.е. во время рендер-фазы)
+         * */
+        appendInitialChild(parentInstance, child) {
+            parentInstance.appendChild(child);
+        },
+
+        /*
+         * Добавляет ребенка корневому контейнеру
+         * Вызывается для каждого ребенка во время коммит-фазы
+         * */
+        appendChildToContainer(container, child) {
+            container.appendChild(child);
+        },
+
+        // Изменение пропсов
+
+        /*
+         * Проверяет наличие изменений и говорит реконсилятору, изменилось ли что-то
+         * Основная задача – найти их, но не вносить. Рекурсивно вызывается на всех
+         * вершинах изменившегося поддерева (кроме текстовых) во время рендер-фазы.
+         * */
+        prepareUpdate(instance, type, oldData, newData) {
+            return newData;
+        },
+
+        /*
+         * Вносит изменения, найденные ранее. Вызывается в фазе коммита
+         * на всех элементах, которые имеют updatePayload
+         * */
+        commitUpdate(domElement, updatePayload, type, oldProps, newProps) {
+            // ToDo ?;
+        },
+
+        // Вставка узлов
+
+        /*
+         * Присоединяет ребенка к родителю
+         * Вызывается для ребенка на стадии коммита, если родитель уже отрисован на экране
+         * */
+        appendChild(parentInstance, child) {
+            parentInstance.appendChild(child);
+        },
+
+        /*
+         * Вставляет нового ребенка перед некоторым узлом, который уже существует на экране
+         * Вызывается во время коммит-фазы
+         */
+        insertBefore(parentInstance, child, beforeChild) {
+            parentInstance.insertBefore(child, beforeChild);
+        },
+
+        /*
+         * Аналогично insertBefore, только родитель – корневой контейнер
+         */
+        insertInContainerBefore(container, child, beforeChild) {
+            container.insertBefore(child, beforeChild);
+        },
+
+        // Удаление узлов
+
+        /*
+         * Удаляет некоторого ребенка (и его детей)
+         * Вызывается в стадии коммита
+         */
+        removeChild(parentInstance, child) {
+            parentInstance.removeChild(child);
+        },
+
+        /*
+         * Аналогично removeChild, если родитель – корневой контейнер
+         */
+        removeChildFromContainer(container, child) {
+            container.removeChild(child);
+        },
+
+        clearContainer(root) {
+            root.children = []
+        },
+        // Обновление текстовых листьев
+
+        /*
+         * Выполняется во время коммит-фазы, если на текстовом листе произошло изменение
+         */
+        commitTextUpdate(textInstance, oldText, newText) {
+            textInstance.value = newText;
+        },
+
+        // Заглушки
+        getRootHostContext(rootContainerInstance) {},
+        getChildHostContext(parentHostContext, type, rootContainerInstance) {},
+        finalizeInitialChildren(domElement, type, props) {
+            return false;
+        },
+
+        // Тут скорее всего будет рендеринг
+        prepareForCommit(rootContainer) {
+        },
+        resetAfterCommit(rootContainer) {
+            console.log("#####################################################\n#####################################################\n")
+            console.log(rootContainer);
+            // console.log("RENDER", inspect(rootContainer, {
+            //     colors: true,
+            //     depth: 5,
+            //     showHidden: false,
+            // }));
+        },
+
+        commitMount(domElement, type, newProps) {},
+    };
+
+    const render = (jsx: React.ReactNode) => {
+        const root = rtDocument.instantiateRoot("SOME-CHAT-ID");
+
+        const reconciler = Reconciler(hostConfig);
+        const container = reconciler.createContainer(root, false, false);
+
+        reconciler.updateContainer(jsx, container);
+    };
+
+    return {
+        render
+    }
+}

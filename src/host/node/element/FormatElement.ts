@@ -1,6 +1,6 @@
 import {RTElement, RTElementRules } from "./type";
 
-export type FormatElementDummy = RTElement<"formatElement", {
+export type RTFormatElement = RTElement<"format", {
     bold?: boolean;
     italic?: boolean;
     underline?: boolean;
