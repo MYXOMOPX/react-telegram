@@ -7,11 +7,12 @@
     "sourceMap": true,
     "sourceRoot": "./src",
     "outDir": "./dist",
-    "types": [
-      "node"
-    ]
+    "typeRoots": [
+      "./node_modules/@types",
+      "./type"
+    ],
   },
   "exclude": [
     "node_modules"
-  ]
+  ],
 }

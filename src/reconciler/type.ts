@@ -1,11 +1,9 @@
-import {RawTextNode, RTElement, RTMessageRootElement} from "../host/node";
-
 type HostContext = any;
 type Type = string;
 type Data = any
-type Container = RTMessageRootElement;
-type Instance = RTElement;
-type TextInstance = RawTextNode;
+type Container = ReactTelegram.RTMessageRootElement;
+type Instance = ReactTelegram.RTElement;
+type TextInstance = ReactTelegram.RawTextNode;
 type UpdatePayload = any;
 
 // Typings for methods used in example renderer

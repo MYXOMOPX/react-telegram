@@ -2,9 +2,12 @@ import React from 'react';
 import Reconciler from 'react-reconciler';
 import {createRTDocument} from "../host/document/RTDocument";
 import {ReconcilerRTHostConfig} from "./type";
-import { inspect } from 'util' // or directly
+import { inspect } from 'util';
+import {ReactTelegramBot} from "../telegram/ReactTelegramBot";
+import {ChatId} from "node-telegram-bot-api";
+import RTMessageRootElement = ReactTelegram.RTMessageRootElement;
 
-export const createReactTelegram = () => {
+export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Promise<void>) => {
     const rtDocument = createRTDocument();
 
     const hostConfig: ReconcilerRTHostConfig = {
@@ -52,7 +55,7 @@ export const createReactTelegram = () => {
          * (т.е. во время рендер-фазы)
          * */
         appendInitialChild(parentInstance, child) {
-            parentInstance.appendChild(child);
+            rtDocument.appendChild(parentInstance, child);
         },
 
         /*
@@ -60,7 +63,7 @@ export const createReactTelegram = () => {
          * Вызывается для каждого ребенка во время коммит-фазы
          * */
         appendChildToContainer(container, child) {
-            container.appendChild(child);
+            rtDocument.appendChild(container, child);
         },
 
         // Изменение пропсов
@@ -89,7 +92,7 @@ export const createReactTelegram = () => {
          * Вызывается для ребенка на стадии коммита, если родитель уже отрисован на экране
          * */
         appendChild(parentInstance, child) {
-            parentInstance.appendChild(child);
+            rtDocument.appendChild(parentInstance, child);
         },
 
         /*
@@ -97,14 +100,14 @@ export const createReactTelegram = () => {
          * Вызывается во время коммит-фазы
          */
         insertBefore(parentInstance, child, beforeChild) {
-            parentInstance.insertBefore(child, beforeChild);
+            rtDocument.insertBefore(parentInstance, child, beforeChild);
         },
 
         /*
          * Аналогично insertBefore, только родитель – корневой контейнер
          */
         insertInContainerBefore(container, child, beforeChild) {
-            container.insertBefore(child, beforeChild);
+            rtDocument.insertBefore(container, child, beforeChild);
         },
 
         // Удаление узлов
@@ -114,14 +117,14 @@ export const createReactTelegram = () => {
          * Вызывается в стадии коммита
          */
         removeChild(parentInstance, child) {
-            parentInstance.removeChild(child);
+            rtDocument.removeChild(parentInstance, child);
         },
 
         /*
          * Аналогично removeChild, если родитель – корневой контейнер
          */
         removeChildFromContainer(container, child) {
-            container.removeChild(child);
+            rtDocument.removeChild(container, child);
         },
 
         clearContainer(root) {
@@ -147,20 +150,21 @@ export const createReactTelegram = () => {
         prepareForCommit(rootContainer) {
         },
         resetAfterCommit(rootContainer) {
-            console.log("#####################################################\n#####################################################\n")
-            console.log(rootContainer);
+            // console.log("#####################################################\n#####################################################\n")
+            // console.log(rootContainer);
             // console.log("RENDER", inspect(rootContainer, {
             //     colors: true,
             //     depth: 5,
             //     showHidden: false,
             // }));
+            onRender(rootContainer)
         },
 
         commitMount(domElement, type, newProps) {},
     };
 
-    const render = (jsx: React.ReactNode) => {
-        const root = rtDocument.instantiateRoot("SOME-CHAT-ID");
+    const render = (jsx: React.ReactNode, chatId: ChatId) => {
+        const root = rtDocument.instantiateRoot(chatId);
 
         const reconciler = Reconciler(hostConfig);
         const container = reconciler.createContainer(root, false, false);

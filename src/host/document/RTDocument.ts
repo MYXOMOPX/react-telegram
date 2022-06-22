@@ -1,8 +1,8 @@
-import {RTDocument} from "./type";
-import {RTElement, RTMessageRootElement} from "../node";
 import { v4 as uuidv4 } from 'uuid';
-import {RTNode} from "../node/type";
-
+import RTNode = ReactTelegram.RTNode;
+import RTDocument = ReactTelegram.RTDocument;
+import RTMessageRootElement = ReactTelegram.RTMessageRootElement;
+import RTElement = ReactTelegram.RTElement;
 
 export const createRTDocument = (): RTDocument => {
 
@@ -13,46 +13,37 @@ export const createRTDocument = (): RTDocument => {
     // remove mutation methods from elements
     // remove circulars from
     // pototype pollution
-    const updateElement = () => {
+    // rtDocument.updateElement = () => {
+    //
+    // }
 
-    }
-
-    const appendChild = (parentInstance: RTElement, node: RTNode) => {
+    rtDocument.appendChild = (parentInstance: RTElement, node: RTNode) => {
         parentInstance.children.push(node);
     }
 
-    const insertBefore = (parentInstance: RTElement, child: RTNode, beforeChild: RTNode) => {
+    rtDocument.insertBefore = (parentInstance: RTElement, child: RTNode, beforeChild: RTNode) => {
         const children = parentInstance.children;
         const index = children.indexOf(beforeChild);
         children.splice(index, 0, child);
     }
 
-    const removeChild = (parentInstance: RTElement, node: RTNode) => {
+    rtDocument.removeChild = (parentInstance: RTElement, node: RTNode) => {
         parentInstance.children = parentInstance.children.filter(it => it !== node);
     }
 
 
     rtDocument.createElement =  (root, elementName, data): RTElement => {
-        let element = {
+        return {
             data,
             elementName,
-            updateElement,
             type: "element",
-            $document: rtDocument,
-            $root: root,
             children: [],
-        } as any as RTElement;
-        element.appendChild = appendChild.bind(null, element);
-        element.removeChild = removeChild.bind(null, element);
-        element.insertBefore = insertBefore.bind(null, element);
-        return element;
+        }
     }
 
     rtDocument.createTextNode = (root, value) => {
         return {
             type: "rawText",
-            $document: rtDocument,
-            $root: root,
             value: value
         }
     }
@@ -61,7 +52,6 @@ export const createRTDocument = (): RTDocument => {
         const uuid = uuidv4()
         const element = rtDocument.createElement(null as any, "root-message", {uuid, chatId});
         const rootEl = element as RTMessageRootElement;
-        rootEl.$root = rootEl;
         rootElements.push(rootEl);
         return rootEl;
     }

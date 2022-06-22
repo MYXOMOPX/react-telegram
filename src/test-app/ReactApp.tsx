@@ -1,6 +1,5 @@
 import {FC, useEffect, useState} from "react";
 
-
 export const ReactApp: FC = () => {
 
     const [text, setText] = useState("TEST");
@@ -11,14 +10,14 @@ export const ReactApp: FC = () => {
     }, [])
 
     return (
-        <message>
+        <>
             {text}
-            <format italic={true}>
+            <format italic>
                 TEST
             </format>
-            <format italic={false}>
+            <format bold>
                 TEST 2
             </format>
-        </message>
+        </>
     )
 }
