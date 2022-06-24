@@ -3,6 +3,7 @@ import RTNode = ReactTelegram.RTNode;
 import RTDocument = ReactTelegram.RTDocument;
 import RTMessageRootElement = ReactTelegram.RTRootElement;
 import RTElement = ReactTelegram.RTElement;
+import RTMessageElement = ReactTelegram.RTMessageElement;
 
 
 export const createRTDocument = (): RTDocument => {
@@ -11,7 +12,13 @@ export const createRTDocument = (): RTDocument => {
 
     const rootElements: Array<RTMessageRootElement> = []
 
-
+    const markMessageOfNodeAsChanged = (node: RTNode) => {
+        let parent = node.parent;
+        while (parent.elementName !== "message") {
+            parent = parent.parent;
+        }
+        (parent as RTMessageElement).isChanged = true;
+    }
 
     rtDocument.appendChild = (parentInstance: RTElement, child: RTNode) => {
         parentInstance.children.push(child);
@@ -32,7 +39,12 @@ export const createRTDocument = (): RTDocument => {
 
     rtDocument.updateElement = (element, data) => {
         element.data = data;
-        // Mark message as changed
+        markMessageOfNodeAsChanged(element);
+    }
+
+    rtDocument.updateTextInstance = (rawTextNode, text) => {
+        rawTextNode.value = text;
+        markMessageOfNodeAsChanged(rawTextNode);
     }
 
     rtDocument.createElement =  (elementName, data): RTElement => {
@@ -43,7 +55,12 @@ export const createRTDocument = (): RTDocument => {
             children: [],
         }
         if (elementName === "root" || elementName === "message") {
-            ((elementName as any).uuid) = uuidv4()
+            ((element as any).uuid) = uuidv4()
+        }
+        if (elementName === "message") {
+            const msg = element as RTMessageElement;
+            msg.rerenderStatus = "None";
+            msg.isChanged = false;
         }
         return element;
     }
@@ -53,6 +70,15 @@ export const createRTDocument = (): RTDocument => {
             type: "rawText",
             value: value
         }
+    }
+
+    rtDocument.getMessagesToRender = (root) => {
+        const child = root.children;
+        const messages = child as RTMessageElement[];
+        return messages.filter(it => {
+            if (it.messageId === undefined && it.rerenderStatus === "None") return true;
+            return it.isChanged;
+        })
     }
 
     rtDocument.instantiateRoot = () => {

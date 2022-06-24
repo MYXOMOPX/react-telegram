@@ -1,19 +1,19 @@
 import TelegramBot, {CallbackQuery, Message, Metadata} from "node-telegram-bot-api";
 import Emitter from "events";
-import {ITypedEventEmitter} from "../util/TypedEventEmitter";
+import {ITypedSubscriptionable} from "../util/TypedEventEmitter";
 
 interface CallbackQueryEvent {
     query: CallbackQuery,
     handled: boolean,
 }
 
-type ReactBotEventManager = ITypedEventEmitter<{
+type ReactBotEventManager = ITypedSubscriptionable<{
     render: (root: ReactTelegram.RTRootElement) => Promise<void>;
     callbackQuery: (event: CallbackQueryEvent) => void,
 }>
 
 export interface ReactTelegramBot extends TelegramBot {
-    sendJSX(node: React.ReactNode, chatId: TelegramBot.ChatId);
+    sendJSX(node: React.ReactNode);
 }
 
 export interface ReconcilerOpts {

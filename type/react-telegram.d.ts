@@ -32,10 +32,13 @@ declare module ReactTelegram {
         getRootByUUID: (uuid: string) => RTRootElement | null;
         destroyRoot: (root: RTRootElement) => void;
 
+        getMessagesToRender: (root: RTRootElement) => Array<RTMessageElement>;
+
         appendChild: (parent: RTElement, child: RTNode) => void;
         removeChild: (parent: RTElement, child: RTNode) => void;
         insertBefore: (parent: RTElement, child: RTNode, beforeChild: RTNode) => void;
         updateElement: (element: RTElement, data: any) => void;
+        updateTextInstance: (rawTextNode: RawTextNode, text: string) => void;
 
         createElement: (name: ReactTelegram.ElementName, data?: any) => RTElement
         createTextNode: (value: string) => RawTextNode
@@ -62,20 +65,26 @@ declare module ReactTelegram {
     type RTRootElement = RTElement<"root", never> & {
         uuid: string;
     }
+    type RTMessageRenderStatus =
+        | "None"
+        | "Parsing"
+        | "Sending"
+    ;
     type RTMessageElement = RTElement<"message", {
         disable_notification?: boolean,
         disable_web_page_preview?: boolean,
         protect_content?: boolean,
         reply_to_message_id?: number,
-        chat_id?: string;
+        chat_id: string | number;
     }> & {
         uuid: string;
         messageId?: number;
         isChanged: boolean;
+        rerenderStatus: RTMessageRenderStatus;
     }
 
-    type RTInlineKeyboardElement = RTElement<"inline-keyboard", never>
-    type RTInlineKeyboardRowElement = RTElement<"inline-keyboard-row", never>
+    type RTInlineKeyboardElement = RTElement<"inline-keyboard", {}>
+    type RTInlineKeyboardRowElement = RTElement<"inline-keyboard-row", {}>
     type RTInlineKeyboardButtonElement = RTElement<"inline-keyboard-button", {
         text: string;
         url?: string;

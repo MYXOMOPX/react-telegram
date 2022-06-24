@@ -20,7 +20,7 @@ interface MessageForSendMedia extends BasicMessageData {
 
 type MessageForSend = MessageForSendText | MessageForSendMedia
 
-export const parseMessageForSend = (messageNode: ReactTelegram.RTMessageElement): MessageForSend => {
+export const parseMessageForSend = async (messageNode: ReactTelegram.RTMessageElement): Promise<MessageForSend> => {
 
     const children = messageNode.children;
     const isMedia = false; //children.filter(it => it.type === "element")
@@ -38,7 +38,7 @@ export const parseMessageForSend = (messageNode: ReactTelegram.RTMessageElement)
     throw new Error("Media messages not implemented yet");
 }
 
-export const parseMessageForUpdate = (messageNode: ReactTelegram.RTMessageElement): MessageForSend => {
+export const parseMessageForUpdate = async (messageNode: ReactTelegram.RTMessageElement): Promise<MessageForSend> => {
 
     const children = messageNode.children;
     const isMedia = false; //children.filter(it => it.type === "element")

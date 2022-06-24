@@ -9,8 +9,9 @@ const reactBot = createReactTelegramBot(
 );
 
 reactBot.on("message", (msg) => {
+    console.log("GOT",msg.text)
     if (msg.text === "/test") {
-        reactBot.sendJSX(<ReactApp/>, msg.chat.id);
+        reactBot.sendJSX(<ReactApp chatId={msg.chat.id}/>);
     }
 })
 

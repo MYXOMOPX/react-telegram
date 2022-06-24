@@ -8,7 +8,7 @@ export const InlineKeyboard: FC<InlineKeyboardProps> = (props) => {
     const {columns, children} = props
 
     return (
-        <inline-keyboard columns={columns}>
+        <inline-keyboard>
             {children}
         </inline-keyboard>
     )

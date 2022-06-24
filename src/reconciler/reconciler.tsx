@@ -1,15 +1,17 @@
 import React from 'react';
 import Reconciler from 'react-reconciler';
-import {createRTDocument} from "../host/document/RTDocument";
 import {ReconcilerRTHostConfig} from "./type";
-import { inspect } from 'util';
-import {ChatId} from "node-telegram-bot-api";
-import RTMessageRootElement = ReactTelegram.RTRootElement;
 
+import {RootBotContextType} from "../react/context/RootBotContext/type";
+import {RootBotContext} from "../react/context/RootBotContext/RootBotContext";
 
+export interface CreateRTReconcilerOpts {
+    rtDocument: ReactTelegram.RTDocument,
+    render: (root: ReactTelegram.RTRootElement, messageList: Array<ReactTelegram.RTMessageElement>) => void,
+}
 
-export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Promise<void>) => {
-    const rtDocument = createRTDocument();
+export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
+    const {rtDocument, render: renderFn} = opts;
 
     const hostConfig: ReconcilerRTHostConfig = {
         // Среда поддерживает мутацию нод
@@ -34,8 +36,8 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
          *
          * Возвращает созданный инстанс
          * */
-        createInstance(type, data, rootContainerInstance) {
-            const node = rtDocument.createElement(rootContainerInstance, type, data);
+        createInstance(type, data) {
+            const node = rtDocument.createElement(type, data);
 
             return node;
         },
@@ -46,8 +48,8 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
          *
          * Возвращает созданный текстовый инстанс
          * */
-        createTextInstance(text, rootContainer) {
-            return rtDocument.createTextNode(rootContainer, text);
+        createTextInstance(text) {
+            return rtDocument.createTextNode(text);
         },
 
         /*
@@ -137,7 +139,7 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
          * Выполняется во время коммит-фазы, если на текстовом листе произошло изменение
          */
         commitTextUpdate(textInstance, oldText, newText) {
-            textInstance.value = newText;
+            rtDocument.updateTextInstance(textInstance, newText);
         },
 
         getRootHostContext(rootContainerInstance) {},
@@ -152,26 +154,35 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
         prepareForCommit(rootContainer) {
         },
         resetAfterCommit(rootContainer) {
-            // console.log("#####################################################\n#####################################################\n")
-            // console.log(rootContainer);
-            // console.log("RENDER", inspect(rootContainer, {
-            //     colors: true,
-            //     depth: 5,
-            //     showHidden: false,
-            // }));
-            onRender(rootContainer)
+            renderFn(rootContainer, rtDocument.getMessagesToRender(rootContainer))
         },
 
         commitMount(domElement, type, newProps) {},
     };
 
-    const render = (jsx: React.ReactNode, chatId: ChatId) => {
-        const root = rtDocument.instantiateRoot(chatId);
+    const render = (jsx: React.ReactNode, ctxValue: Partial<RootBotContextType>) => {
+        console.log("#RECONCILER:RENDER");
+        const root = rtDocument.instantiateRoot();
 
+        console.log("#RECONCILER:RENDER CREATE CONF")
         const reconciler = Reconciler(hostConfig);
+        console.log("#RECONCILER:RENDER CREATE CONTAINER")
         const container = reconciler.createContainer(root, false, false);
 
-        reconciler.updateContainer(jsx, container);
+        const fullCtxVal: RootBotContextType = {
+            ...ctxValue,
+            root: root
+        } as RootBotContextType;
+
+        console.log("#RECONCILER:RENDER CREATE CTX")
+        const jsxWithContext = (
+            <RootBotContext.Provider value={fullCtxVal}>
+                {jsx}
+            </RootBotContext.Provider>
+        )
+        console.log("#RECONCILER:RENDER UPDATING CONTAINER")
+        reconciler.updateContainer(jsxWithContext, container);
+        console.log("UPDATED CONTAINER JSX");
         return root;
     };
 

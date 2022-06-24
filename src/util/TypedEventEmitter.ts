@@ -1,9 +1,8 @@
 import {EventEmitter} from "events";
 
-export interface ITypedEventEmitter<T> {
+
+export interface ITypedSubscriptionable<T> {
     addListener<E extends keyof T>(event: E, listener: T[E]): this;
-    eventNames(): (keyof T)[];
-    getMaxListeners(): number;
     // listenerCount<E extends keyof T>(event: E): number;
     listeners<E extends keyof T>(event: E): Function[];
     off<E extends keyof T>(event: E, listener: T[E]): this;
@@ -13,11 +12,20 @@ export interface ITypedEventEmitter<T> {
     prependOnceListener<E extends keyof T>(event: E, listener: T[E]): this;
     removeAllListeners<E extends keyof T>(event: E): this;
     removeListener<E extends keyof T>(event: E, listener: T[E]): this;
+}
+
+export interface ITypedEmittable<T> {
+    emit<E extends keyof T>(event: E, ...args: [T[E]] extends [((...args: infer U) => any)] ? U : ([T[E]] extends [void] ? [] : [T[E]])): boolean;
+}
+
+export interface ITypedEventManager<T> {
+    eventNames(): (keyof T)[];
+    getMaxListeners(): number;
     setMaxListeners(maxListeners: number): this;
 }
 
-declare class TypedEventEmitterImpl<T> implements ITypedEventEmitter<T>{
-    protected emit<E extends keyof T>(event: E, ...args: [T[E]] extends [((...args: infer U) => any)] ? U : ([T[E]] extends [void] ? [] : [T[E]])): boolean;
+declare class TypedEventEmitterImpl<T> implements ITypedSubscriptionable<T>, ITypedEmittable<T>, ITypedEventManager<T>{
+    emit<E extends keyof T>(event: E, ...args: [T[E]] extends [((...args: infer U) => any)] ? U : ([T[E]] extends [void] ? [] : [T[E]])): boolean;
 
     addListener<E extends keyof T>(event: E, listener: T[E]): this;
     eventNames(): (keyof T)[];
