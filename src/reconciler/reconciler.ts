@@ -3,9 +3,10 @@ import Reconciler from 'react-reconciler';
 import {createRTDocument} from "../host/document/RTDocument";
 import {ReconcilerRTHostConfig} from "./type";
 import { inspect } from 'util';
-import {ReactTelegramBot} from "../telegram/ReactTelegramBot";
 import {ChatId} from "node-telegram-bot-api";
-import RTMessageRootElement = ReactTelegram.RTMessageRootElement;
+import RTMessageRootElement = ReactTelegram.RTRootElement;
+
+
 
 export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Promise<void>) => {
     const rtDocument = createRTDocument();
@@ -33,7 +34,7 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
          *
          * Возвращает созданный инстанс
          * */
-        createInstance(type: string, data: any, rootContainerInstance) {
+        createInstance(type, data, rootContainerInstance) {
             const node = rtDocument.createElement(rootContainerInstance, type, data);
 
             return node;
@@ -139,9 +140,10 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
             textInstance.value = newText;
         },
 
-        // Заглушки
         getRootHostContext(rootContainerInstance) {},
         getChildHostContext(parentHostContext, type, rootContainerInstance) {},
+
+        // Заглушки
         finalizeInitialChildren(domElement, type, props) {
             return false;
         },
@@ -170,6 +172,7 @@ export const createRTReconciler = (onRender: (root: RTMessageRootElement) => Pro
         const container = reconciler.createContainer(root, false, false);
 
         reconciler.updateContainer(jsx, container);
+        return root;
     };
 
     return {

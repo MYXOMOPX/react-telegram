@@ -1,4 +1,5 @@
 import {FC, useEffect, useState} from "react";
+import {Format, InlineButton, InlineKeyboard} from "../component";
 
 export const ReactApp: FC = () => {
 
@@ -10,14 +11,21 @@ export const ReactApp: FC = () => {
     }, [])
 
     return (
-        <>
+        <message>
             {text}
-            <format italic>
-                TEST
-            </format>
-            <format bold>
-                TEST 2
-            </format>
-        </>
+            <Format italic>
+                {" "} TEST
+            </Format>
+            <Format bold>
+                {" "} TEST 2
+            </Format>
+            <InlineKeyboard columns={2}>
+                {/* InlineKeyboardRow */}
+                <InlineButton text={"Button 1"} url={"https://google.ru"} />
+                <InlineButton text={"Button 2"} url={"https://translate.google.ru"}/>
+                <InlineButton text={"Button 3"} url={"https://translate.google.ru"}/>
+                <InlineButton text={"Button 4"} url={"https://translate.google.ru"}/>
+            </InlineKeyboard>
+        </message>
     )
 }

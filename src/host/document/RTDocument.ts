@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import RTNode = ReactTelegram.RTNode;
 import RTDocument = ReactTelegram.RTDocument;
-import RTMessageRootElement = ReactTelegram.RTMessageRootElement;
+import RTMessageRootElement = ReactTelegram.RTRootElement;
 import RTElement = ReactTelegram.RTElement;
+
 
 export const createRTDocument = (): RTDocument => {
 
@@ -10,54 +11,55 @@ export const createRTDocument = (): RTDocument => {
 
     const rootElements: Array<RTMessageRootElement> = []
 
-    // remove mutation methods from elements
-    // remove circulars from
-    // pototype pollution
-    // rtDocument.updateElement = () => {
-    //
-    // }
 
-    rtDocument.appendChild = (parentInstance: RTElement, node: RTNode) => {
-        parentInstance.children.push(node);
+
+    rtDocument.appendChild = (parentInstance: RTElement, child: RTNode) => {
+        parentInstance.children.push(child);
+        child.parent = parentInstance;
     }
 
     rtDocument.insertBefore = (parentInstance: RTElement, child: RTNode, beforeChild: RTNode) => {
         const children = parentInstance.children;
         const index = children.indexOf(beforeChild);
         children.splice(index, 0, child);
+        child.parent = parentInstance;
     }
 
-    rtDocument.removeChild = (parentInstance: RTElement, node: RTNode) => {
-        parentInstance.children = parentInstance.children.filter(it => it !== node);
+    rtDocument.removeChild = (parentInstance: RTElement, child: RTNode) => {
+        parentInstance.children = parentInstance.children.filter(it => it !== child);
+        child.parent = parentInstance;
     }
 
+    rtDocument.updateElement = (element, data) => {
+        element.data = data;
+        // Mark message as changed
+    }
 
-    rtDocument.createElement =  (root, elementName, data): RTElement => {
-        return {
+    rtDocument.createElement =  (elementName, data): RTElement => {
+        const element: RTElement = {
             data,
             elementName,
             type: "element",
             children: [],
         }
+        if (elementName === "root" || elementName === "message") {
+            ((elementName as any).uuid) = uuidv4()
+        }
+        return element;
     }
 
-    rtDocument.createTextNode = (root, value) => {
+    rtDocument.createTextNode = (value) => {
         return {
             type: "rawText",
             value: value
         }
     }
 
-    rtDocument.instantiateRoot = (chatId) => {
-        const uuid = uuidv4()
-        const element = rtDocument.createElement(null as any, "root-message", {uuid, chatId});
+    rtDocument.instantiateRoot = () => {
+        const element = rtDocument.createElement( "root");
         const rootEl = element as RTMessageRootElement;
         rootElements.push(rootEl);
         return rootEl;
-    }
-
-    rtDocument.getRootByMessageId = (messageId) => {
-        return rootElements.find(it => it.data.messageId === messageId) || null
     }
 
     rtDocument.destroyRoot = (root) => {

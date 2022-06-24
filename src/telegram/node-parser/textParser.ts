@@ -8,8 +8,7 @@ export const parseTextInsideElement = (element: ReactTelegram.RTElement): string
             text += parseRawTextNode(child as ReactTelegram.RawTextNode);
         } else if (child.type === "element") {
             if ((child as ReactTelegram.RTElement).elementName !== "format") {
-                // WARN
-                console.warn("DENIED");
+                // WARN maybe?
                 continue;
             }
             text += parseTextElement(child as ReactTelegram.RTFormatElement)

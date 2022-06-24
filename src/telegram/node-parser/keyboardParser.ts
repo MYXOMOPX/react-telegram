@@ -1,29 +1,30 @@
-import RTInlineKeyboardElement = ReactTelegram.RTInlineKeyboardElement;
 import {InlineKeyboardButton, InlineKeyboardMarkup} from "node-telegram-bot-api";
-import RTInlineKeyboardButtonElement = ReactTelegram.RTInlineKeyboardButtonElement;
+import RTInlineKeyboardElement = ReactTelegram.RTInlineKeyboardElement;
+import RTElement = ReactTelegram.RTElement;
 
-
-export const parseKeyboard = (element: RTInlineKeyboardElement): InlineKeyboardButton[][] => {
-    const hasColumns = (element.data.columns || 0) > 0;
+export const parseKeyboardInMessage = (element: ReactTelegram.RTMessageElement): InlineKeyboardMarkup | undefined => {
     const children = element.children;
-    if (hasColumns) {
-        return [children.map(it => parseButton(it as RTInlineKeyboardButtonElement))]
-    }
-    const columns: InlineKeyboardButton[][] = [];
-    for (let i = 0; i < children.length; i++) {
-        const button = parseButton(children[0] as RTInlineKeyboardButtonElement);
-
-        const lastRowI = columns.length - 1;
-        const lastRowLen = columns.length && columns[lastRowI].length;
-        if (columns.length === 0 || lastRowLen === 4) {
-            columns.push([button]);
-            continue;
-        }
-        columns[lastRowI].push(button)
-    }
-    return columns;
+    const kb = children.find(it => it.type === "element" && (it as RTElement).elementName === "inline-keyboard");
+    if (kb === undefined) return undefined;
+    return parseKeyboard(kb as RTInlineKeyboardElement);
 }
 
-const parseButton = (element: RTInlineKeyboardButtonElement): InlineKeyboardButton => {
-    return element.data;
+const parseKeyboard = (element: RTInlineKeyboardElement): InlineKeyboardMarkup => {
+    const children = element.children;
+
+    return {
+        inline_keyboard: children.map(parseKeyboardChild).filter(it => it !== null)
+    }
+}
+
+const parseKeyboardChild = (
+    element: RTElement
+): InlineKeyboardButton[] | null => {
+    if (element.elementName === "inline-keyboard-button") {
+        return [element.data]
+    } else if (element.elementName === "inline-keyboard-row") {
+        return element.children.map(it => (it as RTElement).data);
+    } else {
+        return null
+    }
 }

@@ -1,7 +1,7 @@
-import RTMessageRootElement = ReactTelegram.RTMessageRootElement;
-import {InlineKeyboardMarkup, SendMessageOptions} from "node-telegram-bot-api";
+import {InlineKeyboardMarkup } from "node-telegram-bot-api";
 import ReactTelegramMessageType = ReactTelegram.ReactTelegramMessageType;
 import {parseTextInsideElement} from "./textParser";
+import {parseKeyboardInMessage} from "./keyboardParser";
 
 interface BasicMessageData {
     type: ReactTelegramMessageType
@@ -20,32 +20,37 @@ interface MessageForSendMedia extends BasicMessageData {
 
 type MessageForSend = MessageForSendText | MessageForSendMedia
 
-export const parseMessageForSend = (root: RTMessageRootElement): MessageForSend => {
+export const parseMessageForSend = (messageNode: ReactTelegram.RTMessageElement): MessageForSend => {
 
-    const children = root.children;
+    const children = messageNode.children;
     const isMedia = false; //children.filter(it => it.type === "element")
 
-
+    const replyMarkup = parseKeyboardInMessage(messageNode);
 
     if (!isMedia) {
-        const text = parseTextInsideElement(root);
+        const text = parseTextInsideElement(messageNode);
         return {
             type: "text",
             text,
+            reply_markup: replyMarkup
         }
     }
     throw new Error("Media messages not implemented yet");
 }
 
-export const parseMessageForUpdate = (root: RTMessageRootElement): MessageForSend => {
+export const parseMessageForUpdate = (messageNode: ReactTelegram.RTMessageElement): MessageForSend => {
 
-    const children = root.children;
-    const isMedia = false;
+    const children = messageNode.children;
+    const isMedia = false; //children.filter(it => it.type === "element")
+
+    const replyMarkup = parseKeyboardInMessage(messageNode);
+
     if (!isMedia) {
-        const text = parseTextInsideElement(root);
+        const text = parseTextInsideElement(messageNode);
         return {
             type: "text",
             text,
+            reply_markup: replyMarkup
         }
     }
     throw new Error("Media messages not implemented yet");

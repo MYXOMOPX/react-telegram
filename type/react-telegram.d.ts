@@ -7,10 +7,11 @@ declare module ReactTelegram {
     type RTNodeType = "rawText" | "element"
     interface RTNode<T extends RTNodeType = RTNodeType> {
         type: T;
+        parent?: RTElement
     }
 
     // ELEMENT
-    export interface RTElement<T extends  string = string, Data = any> extends RTNode<"element"> {
+    export interface RTElement<T extends ElementName = ElementName, Data = any, Ext = {}> extends RTNode<"element"> {
         elementName: T;
         data?: Data;
 
@@ -27,36 +28,54 @@ declare module ReactTelegram {
     // ### #################### ### //
 
     interface RTDocument {
-        instantiateRoot: (chatId: string | number) => RTMessageRootElement;
-        getRootByMessageId: (messageId: number) => RTMessageRootElement | null;
-        getRootByUUID: (uuid: string) => RTMessageRootElement | null;
-        destroyRoot: (root: RTMessageRootElement) => void;
+        instantiateRoot: () => RTRootElement;
+        getRootByUUID: (uuid: string) => RTRootElement | null;
+        destroyRoot: (root: RTRootElement) => void;
 
         appendChild: (parent: RTElement, child: RTNode) => void;
         removeChild: (parent: RTElement, child: RTNode) => void;
         insertBefore: (parent: RTElement, child: RTNode, beforeChild: RTNode) => void;
+        updateElement: (element: RTElement, data: any) => void;
 
-        createElement: (root: RTElement, name: string, data?: any) => RTElement
-        createTextNode: (root: RTElement, value: string) => RawTextNode
+        createElement: (name: ReactTelegram.ElementName, data?: any) => RTElement
+        createTextNode: (value: string) => RawTextNode
     }
 
     // ### #################### ### //
     // ### Elements declaration ### //
     // ### #################### ### //
 
-    type RTFormatElement = RTElement<"text", {
+    type ElementName =
+        | "format"
+        | "root"
+        | "message"
+        | "inline-keyboard"
+        | "inline-keyboard-row"
+        | "inline-keyboard-button"
+    ;
+
+    type RTFormatElement = RTElement<"format", {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
     }>
-    type RTMessageRootElement = RTElement<"message-root", {
+    type RTRootElement = RTElement<"root", never> & {
         uuid: string;
-        chatId: string;
+    }
+    type RTMessageElement = RTElement<"message", {
+        disable_notification?: boolean,
+        disable_web_page_preview?: boolean,
+        protect_content?: boolean,
+        reply_to_message_id?: number,
+        chat_id?: string;
+    }> & {
+        uuid: string;
         messageId?: number;
-    }>
-    type RTInlineKeyboardElement = RTElement<"inline-keyboard-button", {
-        columns?: number
-    }>
+        isChanged: boolean;
+    }
+
+    type RTInlineKeyboardElement = RTElement<"inline-keyboard", never>
+    type RTInlineKeyboardRowElement = RTElement<"inline-keyboard-row", never>
     type RTInlineKeyboardButtonElement = RTElement<"inline-keyboard-button", {
         text: string;
         url?: string;
