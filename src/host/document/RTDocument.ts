@@ -1,16 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
 import RTNode = ReactTelegram.RTNode;
 import RTDocument = ReactTelegram.RTDocument;
-import RTMessageRootElement = ReactTelegram.RTRootElement;
 import RTElement = ReactTelegram.RTElement;
 import RTMessageElement = ReactTelegram.RTMessageElement;
+import RTRootElement = ReactTelegram.RTRootElement;
 
 
 export const createRTDocument = (): RTDocument => {
 
     const rtDocument = {} as RTDocument;
 
-    const rootElements: Array<RTMessageRootElement> = []
+    const rootElements: Array<RTRootElement> = []
 
     const markMessageOfNodeAsChanged = (node: RTNode) => {
         let parent = node.parent;
@@ -81,11 +81,31 @@ export const createRTDocument = (): RTDocument => {
         })
     }
 
-    rtDocument.instantiateRoot = () => {
+    rtDocument.getMessages = (root) => {
+        return root.children as RTMessageElement[]
+    }
+
+    rtDocument.instantiateRoot = (chatId, events) => {
         const element = rtDocument.createElement( "root");
-        const rootEl = element as RTMessageRootElement;
+        const rootEl = element as RTRootElement;
+        rootEl.chatId = chatId;
+        rootEl.events = events;
         rootElements.push(rootEl);
         return rootEl;
+    }
+
+    rtDocument.getRootsByMessage = (chatId, messageId) => {
+        return rootElements
+            .filter(it => it.chatId === chatId)
+            .filter(it => {
+                return it.children.some((children) => {
+                    if (children.type !== "element") return false;
+                    if ((children as RTElement).elementName !== "message") return false;
+                    return (children as RTMessageElement).messageId === messageId
+                })
+            })[0]
+            || null
+        ;
     }
 
     rtDocument.destroyRoot = (root) => {

@@ -4,6 +4,7 @@ import {ReconcilerRTHostConfig} from "./type";
 
 import {RootBotContextType} from "../react/context/RootBotContext/type";
 import {RootBotContext} from "../react/context/RootBotContext/RootBotContext";
+import ChatID = ReactTelegram.ChatID;
 
 export interface CreateRTReconcilerOpts {
     rtDocument: ReactTelegram.RTDocument,
@@ -160,9 +161,9 @@ export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
         commitMount(domElement, type, newProps) {},
     };
 
-    const render = (jsx: React.ReactNode, ctxValue: Partial<RootBotContextType>) => {
+    const render = (jsx: React.ReactNode, chatId: ChatID, ctxValue: Partial<RootBotContextType>) => {
         console.log("#RECONCILER:RENDER");
-        const root = rtDocument.instantiateRoot();
+        const root = rtDocument.instantiateRoot(chatId, ctxValue.events);
 
         console.log("#RECONCILER:RENDER CREATE CONF")
         const reconciler = Reconciler(hostConfig);

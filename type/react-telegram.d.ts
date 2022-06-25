@@ -1,4 +1,7 @@
 declare module ReactTelegram {
+    type RootEvents = import("./events").RootEvents;
+    type ITypedSubscriptionable<T> = import("./event-emitter").ITypedSubscriptionable<T>;
+
     // ### ################## ### //
     // ### NODES AND ELEMENTS ### //
     // ### ################## ### //
@@ -28,11 +31,15 @@ declare module ReactTelegram {
     // ### #################### ### //
 
     interface RTDocument {
-        instantiateRoot: () => RTRootElement;
+        instantiateRoot: (chatId: ChatID, events: ITypedSubscriptionable<RootEvents>) => RTRootElement;
         getRootByUUID: (uuid: string) => RTRootElement | null;
         destroyRoot: (root: RTRootElement) => void;
+        getRootsByMessage: (chatId: ChatID, messageId: number) => RTRootElement | null;
 
         getMessagesToRender: (root: RTRootElement) => Array<RTMessageElement>;
+        getMessages: (root: RTRootElement) => Array<RTMessageElement>;
+        hasMessage: (messageId: number) => boolean;
+        getMessageIdsToDelete: (root: RTRootElement) => Array<number>; // ToDo {uuid, messageId}
 
         appendChild: (parent: RTElement, child: RTNode) => void;
         removeChild: (parent: RTElement, child: RTNode) => void;
@@ -44,6 +51,8 @@ declare module ReactTelegram {
         createTextNode: (value: string) => RawTextNode
     }
 
+    type ChatID = string | number;
+
     // ### #################### ### //
     // ### Elements declaration ### //
     // ### #################### ### //
@@ -52,19 +61,21 @@ declare module ReactTelegram {
         | "format"
         | "root"
         | "message"
-        | "inline-keyboard"
+        | "reply-markup"
         | "inline-keyboard-row"
         | "inline-keyboard-button"
     ;
 
+    type RTRootElement = RTElement<"root", {}> & {
+        uuid: string;
+        chatId: ChatID;
+        events: ITypedSubscriptionable<RootEvents>
+    }
     type RTFormatElement = RTElement<"format", {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
     }>
-    type RTRootElement = RTElement<"root", never> & {
-        uuid: string;
-    }
     type RTMessageRenderStatus =
         | "None"
         | "Parsing"
@@ -75,7 +86,7 @@ declare module ReactTelegram {
         disable_web_page_preview?: boolean,
         protect_content?: boolean,
         reply_to_message_id?: number,
-        chat_id: string | number;
+        // custom_chat_id: ChatID;
     }> & {
         uuid: string;
         messageId?: number;
@@ -83,7 +94,14 @@ declare module ReactTelegram {
         rerenderStatus: RTMessageRenderStatus;
     }
 
-    type RTInlineKeyboardElement = RTElement<"inline-keyboard", {}>
+    type ReplyMarkupType =
+        | "inline"
+        | "typing"
+    ;
+
+    type RTReplyMarkupElement = RTElement<"reply-markup", {
+        type: ReplyMarkupType
+    }>
     type RTInlineKeyboardRowElement = RTElement<"inline-keyboard-row", {}>
     type RTInlineKeyboardButtonElement = RTElement<"inline-keyboard-button", {
         text: string;

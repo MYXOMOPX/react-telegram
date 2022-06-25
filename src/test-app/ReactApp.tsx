@@ -1,36 +1,50 @@
-import {FC, useEffect, useState} from "react";
-import {Format, InlineButton, InlineKeyboard, Message} from "../react/component";
+import {FC, useCallback, useEffect, useState} from "react";
+import {Format, InlineButton, InlineClickButton, InlineKeyboard, InlineKeyboardRow, Message} from "../react/component";
 import TelegramBot from "node-telegram-bot-api";
 
 interface ReactAppProps {
-    chatId: string | number;
 }
 
-export const ReactApp: FC<ReactAppProps> = ({chatId}) => {
+export const ReactApp: FC<ReactAppProps> = () => {
 
-    const [text, setText] = useState("TEST");
-    const [isChanged, setIsChanged] = useState(false);
+    const [count, setCount] = useState(10);
 
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setText(t => t+" AFTER TIMEOUT");
-            setIsChanged(true);
-        }, 5000);
-        return () => clearTimeout(timeoutId);
+    const plus = useCallback(() => {
+        setCount(c => c+1);
+    }, []);
+    const minus = useCallback(() => {
+        setCount(c => c-1);
+    }, []);
+
+    const justAnswer = useCallback(() => {
+        return {text: "You clicked me"}
+    }, [])
+
+    const alertAnswer = useCallback(() => {
+        return {text: "You clicked me", showAlert: true}
     }, [])
 
     return (
         <>
-            <Message chatId={chatId}>
+            <Message>
                 <Format italic bold>
-                    {text}
+                    Current count: {count}
                 </Format>
-                <InlineKeyboard columns={2}>
-                    <InlineButton text={"Button 1"} url={"https://google.ru"} />
+                <InlineKeyboard>
+                    <InlineKeyboardRow>
+                        <InlineClickButton text={"PLUS"} onClick={plus} />
+                        <InlineClickButton text={"MINUS"} onClick={minus} />
+                    </InlineKeyboardRow>
                 </InlineKeyboard>
             </Message>
-            <Message chatId={chatId}>
-                <Format>He is changed - {isChanged ? "Yes" : "No"}</Format>
+            <Message >
+                <Format>Just test NOTIFIES</Format>
+                <InlineKeyboard>
+                    <InlineKeyboardRow>
+                        <InlineClickButton text={"SILENT"} onClick={justAnswer} />
+                        <InlineClickButton text={"ALERT"} onClick={alertAnswer} />
+                    </InlineKeyboardRow>
+                </InlineKeyboard>
             </Message>
         </>
     )

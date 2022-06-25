@@ -1,7 +1,7 @@
 import {InlineKeyboardMarkup } from "node-telegram-bot-api";
 import ReactTelegramMessageType = ReactTelegram.ReactTelegramMessageType;
 import {parseTextInsideElement} from "./textParser";
-import {parseKeyboardInMessage} from "./keyboardParser";
+import {parseReplyMarkupInMessage} from "./replyMarkupParser";
 
 interface BasicMessageData {
     type: ReactTelegramMessageType
@@ -25,7 +25,7 @@ export const parseMessageForSend = async (messageNode: ReactTelegram.RTMessageEl
     const children = messageNode.children;
     const isMedia = false; //children.filter(it => it.type === "element")
 
-    const replyMarkup = parseKeyboardInMessage(messageNode);
+    const replyMarkup = parseReplyMarkupInMessage(messageNode);
 
     if (!isMedia) {
         const text = parseTextInsideElement(messageNode);
@@ -43,7 +43,7 @@ export const parseMessageForUpdate = async (messageNode: ReactTelegram.RTMessage
     const children = messageNode.children;
     const isMedia = false; //children.filter(it => it.type === "element")
 
-    const replyMarkup = parseKeyboardInMessage(messageNode);
+    const replyMarkup = parseReplyMarkupInMessage(messageNode);
 
     if (!isMedia) {
         const text = parseTextInsideElement(messageNode);

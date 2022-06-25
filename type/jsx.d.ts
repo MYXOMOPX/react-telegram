@@ -6,7 +6,7 @@ declare module JSX {
         "root": JSXElementData<ReactTelegram.RTRootElement>,
         "message": JSXElementData<ReactTelegram.RTMessageElement>,
         "format": JSXElementData<ReactTelegram.RTFormatElement>,
-        "inline-keyboard": JSXElementData<ReactTelegram.RTInlineKeyboardElement>,
+        "reply-markup": JSXElementData<ReactTelegram.RTReplyMarkupElement>,
         "inline-keyboard-row": JSXElementData<ReactTelegram.RTInlineKeyboardRowElement>,
         "inline-keyboard-button": ReactTelegram.RTElementData<ReactTelegram.RTInlineKeyboardButtonElement>,
     }
