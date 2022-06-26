@@ -88,6 +88,10 @@ export type ReconcilerRTHostConfig = {
         child: Instance | TextInstance
     ): void;
 
+    detachDeletedInstance?(
+        node: Instance
+    ): void
+
     commitTextUpdate?(
         textInstance: TextInstance,
         oldText: string,

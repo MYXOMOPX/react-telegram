@@ -8,7 +8,7 @@ import ChatID = ReactTelegram.ChatID;
 
 export interface CreateRTReconcilerOpts {
     rtDocument: ReactTelegram.RTDocument,
-    render: (root: ReactTelegram.RTRootElement, messageList: Array<ReactTelegram.RTMessageElement>) => void,
+    render: (root: ReactTelegram.RTRootElement, msgs: ReactTelegram.MessagesToRender) => void,
 }
 
 export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
@@ -131,6 +131,10 @@ export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
             rtDocument.removeChild(container, child);
         },
 
+        detachDeletedInstance(node) {
+            rtDocument.detachInstance(node)
+        },
+
         clearContainer(root) {
             root.children = []
         },
@@ -162,12 +166,8 @@ export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
     };
 
     const render = (jsx: React.ReactNode, chatId: ChatID, ctxValue: Partial<RootBotContextType>) => {
-        console.log("#RECONCILER:RENDER");
         const root = rtDocument.instantiateRoot(chatId, ctxValue.events);
-
-        console.log("#RECONCILER:RENDER CREATE CONF")
         const reconciler = Reconciler(hostConfig);
-        console.log("#RECONCILER:RENDER CREATE CONTAINER")
         const container = reconciler.createContainer(root, false, false);
 
         const fullCtxVal: RootBotContextType = {
@@ -175,15 +175,12 @@ export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
             root: root
         } as RootBotContextType;
 
-        console.log("#RECONCILER:RENDER CREATE CTX")
         const jsxWithContext = (
             <RootBotContext.Provider value={fullCtxVal}>
                 {jsx}
             </RootBotContext.Provider>
         )
-        console.log("#RECONCILER:RENDER UPDATING CONTAINER")
         reconciler.updateContainer(jsxWithContext, container);
-        console.log("UPDATED CONTAINER JSX");
         return root;
     };
 

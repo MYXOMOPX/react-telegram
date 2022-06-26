@@ -10,19 +10,20 @@ import RootEvents = ReactTelegram.RootEvents;
 import ChatID = ReactTelegram.ChatID;
 import {CallbackQueryEvent} from "../../type/events";
 import {TypedEventEmitterImpl} from "../../type/event-emitter";
+import {createMessageRenderQueue} from "./MessageRenderQueue";
 
 
 export const createReactTelegramBot = (apiBot: TelegramBot) => {
 
     const reactBot = apiBot as ReactTelegramBot;
     const rtDocument = createRTDocument();
+    const messageQueue = createMessageRenderQueue();
 
     const renderMessageSend = async (root: RTRootElement, message: RTMessageElement) => {
         message.rerenderStatus = "Parsing";
         const msgForSend = await parseMessageForSend(message);
         message.rerenderStatus = "Sending";
         if (msgForSend.type === "text") {
-            console.log("PARSED",msgForSend);
             const msg = await apiBot.sendMessage(root.chatId, msgForSend.text, {
                 parse_mode: "HTML",
                 reply_markup: msgForSend.reply_markup
@@ -34,7 +35,6 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
     }
 
     const renderMessageUpdate = async (root: RTRootElement, message: RTMessageElement) => {
-        console.log("UPDATE");
         message.rerenderStatus = "Parsing";
         const msgForUpdate = await parseMessageForUpdate(message);
         message.rerenderStatus = "Sending";
@@ -49,22 +49,34 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
         message.rerenderStatus = "None";
     }
 
-    // Race conditions (only 1 in queue)
-    const renderMessage = async (root: RTRootElement, message: RTMessageElement) => {
-        // if (!message.data.) {
-        //     console.warn("Found message without chat_id. It can't be sent")
-        //     throw new Error("Found message without chat_id. It can't be sent");
-        // }
-        message.isChanged = false;
-        if (message.messageId) {
-            await renderMessageUpdate(root, message)
-        } else {
-            await renderMessageSend(root, message)
-        }
+    // Here will be problem, if message removed from Document in time when we sending it.
+    const renderMessageRemove = async (root: RTRootElement, message: RTMessageElement) => {
+        if (!message.messageId) return;
+        message.rerenderStatus = "Removing"
+        await apiBot.deleteMessage(root.chatId, String(message.messageId))
+        message.rerenderStatus = "None"
     }
 
-    const onRender = async (root: RTRootElement, messages: Array<RTMessageElement>) => {
-        messages.forEach(msg => renderMessage(root, msg))
+
+    const onRender = async (root: RTRootElement, renderDescriptor: ReactTelegram.MessagesToRender) => {
+        console.log("ON RENDER", renderDescriptor)
+        if (renderDescriptor.created && renderDescriptor.created.length > 0) {
+            renderDescriptor.created.forEach(it => {
+                messageQueue.addToQueue(it, "Create", () => renderMessageSend(root, it))
+            });
+        }
+        if (renderDescriptor.changed && renderDescriptor.changed.length > 0) {
+            renderDescriptor.changed.forEach(it => {
+                messageQueue.addToQueue(it, "Update", () => renderMessageUpdate(root, it))
+            });
+        }
+        if (renderDescriptor.removed && renderDescriptor.removed.length > 0) {
+            console.log("REMOVE",renderDescriptor.removed)
+            renderDescriptor.removed.forEach(it => {
+                messageQueue.addToQueue(it, "Remove", () => renderMessageRemove(root, it))
+            });
+            root.messagesToRemove = [];
+        }
     }
 
 

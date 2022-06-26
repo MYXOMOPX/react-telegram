@@ -1,4 +1,4 @@
-import {FC, useCallback, useEffect, useState} from "react";
+import {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {Format, InlineButton, InlineClickButton, InlineKeyboard, InlineKeyboardRow, Message} from "../react/component";
 import TelegramBot from "node-telegram-bot-api";
 
@@ -7,7 +7,15 @@ interface ReactAppProps {
 
 export const ReactApp: FC<ReactAppProps> = () => {
 
-    const [count, setCount] = useState(10);
+    const [count, setCount] = useState(1);
+
+    const messages = useMemo(() => {
+        return new Array(count).fill(null).map((_ ,i) => (
+            <Message key={i}>
+                <Format>I'm a message №{i}</Format>
+            </Message>
+        ))
+    }, [count])
 
     const plus = useCallback(() => {
         setCount(c => c+1);
@@ -27,25 +35,21 @@ export const ReactApp: FC<ReactAppProps> = () => {
     return (
         <>
             <Message>
-                <Format italic bold>
-                    Current count: {count}
+                <Format italic>
+                    Messages count: <Format bold>{count}</Format>
                 </Format>
                 <InlineKeyboard>
                     <InlineKeyboardRow>
-                        <InlineClickButton text={"PLUS"} onClick={plus} />
-                        <InlineClickButton text={"MINUS"} onClick={minus} />
+                        <InlineClickButton text={"+"} onClick={plus} />
+                        <InlineClickButton text={"-"} onClick={minus} />
                     </InlineKeyboardRow>
-                </InlineKeyboard>
-            </Message>
-            <Message >
-                <Format>Just test NOTIFIES</Format>
-                <InlineKeyboard>
                     <InlineKeyboardRow>
                         <InlineClickButton text={"SILENT"} onClick={justAnswer} />
                         <InlineClickButton text={"ALERT"} onClick={alertAnswer} />
                     </InlineKeyboardRow>
                 </InlineKeyboard>
             </Message>
+            {messages}
         </>
     )
 }

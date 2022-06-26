@@ -34,7 +34,17 @@ export const createRTDocument = (): RTDocument => {
 
     rtDocument.removeChild = (parentInstance: RTElement, child: RTNode) => {
         parentInstance.children = parentInstance.children.filter(it => it !== child);
-        child.parent = parentInstance;
+        if (child.type === "element" && (child as RTElement).elementName === "message") {
+            const msg = child as RTMessageElement;
+            (parentInstance as RTRootElement).messagesToRemove.push(msg);
+            msg.isRemoved = true;
+        }
+        console.log("REMOVE CHILD",parentInstance,child);
+
+    }
+
+    rtDocument.detachInstance = (child: RTNode) => {
+        child.parent = undefined;
     }
 
     rtDocument.updateElement = (element, data) => {
@@ -75,10 +85,11 @@ export const createRTDocument = (): RTDocument => {
     rtDocument.getMessagesToRender = (root) => {
         const child = root.children;
         const messages = child as RTMessageElement[];
-        return messages.filter(it => {
-            if (it.messageId === undefined && it.rerenderStatus === "None") return true;
-            return it.isChanged;
-        })
+        return {
+            created: messages.filter(it => it.messageId === undefined && it.rerenderStatus === "None"),
+            changed: messages.filter(it => it.isChanged),
+            removed: root.messagesToRemove
+        }
     }
 
     rtDocument.getMessages = (root) => {
@@ -90,6 +101,7 @@ export const createRTDocument = (): RTDocument => {
         const rootEl = element as RTRootElement;
         rootEl.chatId = chatId;
         rootEl.events = events;
+        rootEl.messagesToRemove = [];
         rootElements.push(rootEl);
         return rootEl;
     }

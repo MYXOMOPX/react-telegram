@@ -30,19 +30,26 @@ declare module ReactTelegram {
     // ###       DOCUMENT       ### //
     // ### #################### ### //
 
+    interface MessagesToRender {
+        created?: Array<RTMessageElement>;
+        changed?: Array<RTMessageElement>;
+        removed?: Array<RTMessageElement>;
+    }
+
     interface RTDocument {
         instantiateRoot: (chatId: ChatID, events: ITypedSubscriptionable<RootEvents>) => RTRootElement;
         getRootByUUID: (uuid: string) => RTRootElement | null;
         destroyRoot: (root: RTRootElement) => void;
         getRootsByMessage: (chatId: ChatID, messageId: number) => RTRootElement | null;
 
-        getMessagesToRender: (root: RTRootElement) => Array<RTMessageElement>;
+        getMessagesToRender: (root: RTRootElement) => MessagesToRender;
         getMessages: (root: RTRootElement) => Array<RTMessageElement>;
         hasMessage: (messageId: number) => boolean;
         getMessageIdsToDelete: (root: RTRootElement) => Array<number>; // ToDo {uuid, messageId}
 
         appendChild: (parent: RTElement, child: RTNode) => void;
         removeChild: (parent: RTElement, child: RTNode) => void;
+        detachInstance: (child: RTNode) => void;
         insertBefore: (parent: RTElement, child: RTNode, beforeChild: RTNode) => void;
         updateElement: (element: RTElement, data: any) => void;
         updateTextInstance: (rawTextNode: RawTextNode, text: string) => void;
@@ -69,6 +76,7 @@ declare module ReactTelegram {
     type RTRootElement = RTElement<"root", {}> & {
         uuid: string;
         chatId: ChatID;
+        messagesToRemove: Array<RTMessageElement>;
         events: ITypedSubscriptionable<RootEvents>
     }
     type RTFormatElement = RTElement<"format", {
@@ -80,6 +88,7 @@ declare module ReactTelegram {
         | "None"
         | "Parsing"
         | "Sending"
+        | "Removing"
     ;
     type RTMessageElement = RTElement<"message", {
         disable_notification?: boolean,
@@ -91,6 +100,7 @@ declare module ReactTelegram {
         uuid: string;
         messageId?: number;
         isChanged: boolean;
+        isRemoved: boolean;
         rerenderStatus: RTMessageRenderStatus;
     }
 

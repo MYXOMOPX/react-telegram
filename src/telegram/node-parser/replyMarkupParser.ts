@@ -6,7 +6,6 @@ export const parseReplyMarkupInMessage = (element: ReactTelegram.RTMessageElemen
     const children = element.children;
     const kb = children.find(it => it.type === "element" && (it as RTElement).elementName === "reply-markup");
     if (kb === undefined) return undefined;
-    console.log("###KB", (kb as RTInlineKeyboardElement).children[0]);
     return parseInlineKeyboard(kb as RTInlineKeyboardElement);
 }
 
