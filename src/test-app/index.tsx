@@ -8,7 +8,7 @@ const reactBot = createReactTelegramBot(
     new TelegramBot(token, {polling: true})
 );
 
-reactBot.on("message", (msg) => {
+reactBot.events.on("message", (msg) => {
     console.log("GOT",msg.text)
     if (msg.text === "/test") {
         reactBot.sendJSX(<ReactApp/>, msg.chat.id);

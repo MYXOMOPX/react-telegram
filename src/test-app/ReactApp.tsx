@@ -1,6 +1,7 @@
 import {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {Format, InlineButton, InlineClickButton, InlineKeyboard, InlineKeyboardRow, Message} from "../react/component";
 import TelegramBot from "node-telegram-bot-api";
+import {useMessage} from "../react/hook";
 
 interface ReactAppProps {
 }
@@ -8,14 +9,14 @@ interface ReactAppProps {
 export const ReactApp: FC<ReactAppProps> = () => {
 
     const [count, setCount] = useState(1);
+    const [name, setName] = useState("");
+    const [listeningName, setListeningName] = useState(false);
 
-    const messages = useMemo(() => {
-        return new Array(count).fill(null).map((_ ,i) => (
-            <Message key={i}>
-                <Format>I'm a message №{i}</Format>
-            </Message>
-        ))
-    }, [count])
+    useMessage((msg) => {
+        setName(msg.text);
+        setListeningName(false);
+    }, listeningName)
+
 
     const plus = useCallback(() => {
         setCount(c => c+1);
@@ -23,33 +24,32 @@ export const ReactApp: FC<ReactAppProps> = () => {
     const minus = useCallback(() => {
         setCount(c => c-1);
     }, []);
-
-    const justAnswer = useCallback((answer) => {
-        answer("You clicked me")
-    }, [])
-
-    const alertAnswer = useCallback((answer) => {
-        return answer({text: "You clicked me", showAlert: true})
+    const startListenName = useCallback(() => {
+        setListeningName(true);
     }, [])
 
     return (
         <>
             <Message>
-                <Format italic>
-                    Messages count: <Format bold>{count}</Format>
-                </Format>
+                <Format bold>Count:</Format> {count}
+                <Format newLine bold>Listening:</Format> {listeningName ? "Yes" : "No"}
+                {name ?
+                    <Format newLine>
+                        <Format bold>Your name is:</Format> {name}
+                    </Format>
+                    :
+                    ""
+                }
                 <InlineKeyboard>
                     <InlineKeyboardRow>
                         <InlineClickButton text={"+"} onClick={plus} />
                         <InlineClickButton text={"-"} onClick={minus} />
                     </InlineKeyboardRow>
                     <InlineKeyboardRow>
-                        <InlineClickButton text={"SILENT"} onClick={justAnswer} />
-                        <InlineClickButton text={"ALERT"} onClick={alertAnswer} />
+                        <InlineClickButton text={"ENTER NAME"} onClick={startListenName} />
                     </InlineKeyboardRow>
                 </InlineKeyboard>
             </Message>
-            {messages}
         </>
     )
 }

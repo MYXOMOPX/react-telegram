@@ -32,5 +32,6 @@ const parseTextElement = (element: ReactTelegram.RTFormatElement): string => {
     if (data.bold) text = "<b>"+text+"</b>"
     if (data.italic) text = "<i>"+text+"</i>"
     if (data.underline) text = "<u>"+text+"</u>"
+    if (data.newLine) text = "\n"+text;
     return text;
 }

@@ -94,6 +94,7 @@ declare module ReactTelegram {
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
+        newLine?: boolean;
     }>
     type RTMessageRenderStatus =
         | "None"

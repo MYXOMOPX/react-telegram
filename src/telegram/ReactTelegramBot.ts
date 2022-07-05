@@ -8,6 +8,7 @@ import RTRootElement = ReactTelegram.RTRootElement;
 import ChatID = ReactTelegram.ChatID;
 import {createMessageRenderQueue} from "./MessageRenderQueue";
 import {CallbackQueryAnswer, RTCallbackQueryEvent} from "../../type/events";
+import {TypedEventEmitter} from "../util";
 
 
 export const createReactTelegramBot = (apiBot: TelegramBot) => {
@@ -15,6 +16,8 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
     const reactBot = apiBot as ReactTelegramBot;
     const rtDocument = createRTDocument();
     const messageQueue = createMessageRenderQueue();
+
+    reactBot.events = new TypedEventEmitter();
 
     const renderMessageSend = async (root: RTRootElement, message: RTMessageElement) => {
         message.rerenderStatus = "Parsing";
@@ -99,11 +102,19 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
             answer: answerQuery
         }
         rtDocument.emitCallbackQueryEvent(event);
-        console.log("EVENT AFTER LISTENERS",event);
-        if (event.handled && !isAlreadyAnswered) {
-            answerQuery(undefined);
+        if (event.handled) {
+            if (!isAlreadyAnswered) answerQuery(undefined);
+        } else {
+            reactBot.events.emit("callback_query", query)
         }
-        // emit other event (NOT IN ROOT)
+    })
+
+    apiBot.on("message", (message, metadata) => {
+        const event = {message, handled: false};
+        rtDocument.messageEvents.emit(String(message.chat.id), event);
+        if (!event.handled) {
+            reactBot.events.emit("message", message, metadata)
+        }
     })
 
     const rtReconciler = createRTReconciler({
