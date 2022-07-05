@@ -24,12 +24,12 @@ export const ReactApp: FC<ReactAppProps> = () => {
         setCount(c => c-1);
     }, []);
 
-    const justAnswer = useCallback(() => {
-        return {text: "You clicked me"}
+    const justAnswer = useCallback((answer) => {
+        answer("You clicked me")
     }, [])
 
-    const alertAnswer = useCallback(() => {
-        return {text: "You clicked me", showAlert: true}
+    const alertAnswer = useCallback((answer) => {
+        return answer({text: "You clicked me", showAlert: true})
     }, [])
 
     return (

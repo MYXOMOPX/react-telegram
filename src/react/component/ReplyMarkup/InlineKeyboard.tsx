@@ -1,9 +1,12 @@
 import RTElementData = ReactTelegram.RTElementData;
 import RTInlineKeyboardButtonElement = ReactTelegram.RTInlineKeyboardButtonElement;
-import {FC, PropsWithChildren, useContext, useEffect, useRef} from "react";
+import {FC, PropsWithChildren, useContext, useRef} from "react";
 import { v4 as uuidv4 } from 'uuid';
-import {CallbackQueryEvent} from "../../../../type/events";
 import {RootBotContext} from "../../context/RootBotContext/RootBotContext";
+import {useDocumentSubscribe} from "../../hook";
+import {getEventNameForQueryButton} from "../../../util";
+import {MessageContext} from "../message/Message";
+import {CallbackQueryAnswer, CallbackQueryAnswerFunction} from "../../../../type/events";
 
 type InlineKeyboardProps = PropsWithChildren<{}>
 
@@ -33,26 +36,25 @@ export const InlineButton: FC<InlineButtonProps> = (props) => {
 
 type InlineClickButtonProps = {
     text?: string;
-    onClick: () => CallbackQueryEvent["answer"] | void | undefined;
+    onClick: (answer: CallbackQueryAnswerFunction) => void;
 }
 
 export const InlineClickButton: FC<InlineClickButtonProps> = (props) => {
     const {onClick, text} = props;
 
     // ToDo useLatestCallback
-    const rootCtx = useContext(RootBotContext);
+    const { rtDocument, chatId } = useContext(RootBotContext);
+    const { messageId } = useContext(MessageContext)
     const callbackDataRef = useRef(uuidv4());
 
-    useEffect(() => {
-        const listener = (event: CallbackQueryEvent) => {
-            if (event.handled || event.query.data !== callbackDataRef.current) return;
-            const answer = onClick();
+    useDocumentSubscribe(
+        rtDocument.callbackQueryEvents,
+        getEventNameForQueryButton(chatId, messageId, callbackDataRef.current),
+        async (event) => {
+            onClick(event.answer);
             event.handled = true;
-            event.answer = answer || undefined;
         }
-        rootCtx.events.on("callbackQuery", listener);
-        return () => { rootCtx.events.off("callbackQuery", listener) }
-    }, [onClick])
+    )
 
     return (
         <inline-keyboard-button text={text} callback_data={callbackDataRef.current} />

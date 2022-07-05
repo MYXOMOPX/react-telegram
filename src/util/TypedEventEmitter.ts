@@ -1,4 +1,4 @@
 import {EventEmitter} from "events";
-import {TypedEventEmitterImpl} from "../../type/event-emitter";
+import {SingleEventEmitterImpl} from "../../type/event-emitter";
 
-export const TypedEventEmitter = EventEmitter as any as typeof TypedEventEmitterImpl;
+export const TypedSingleEventEmitter = EventEmitter as any as typeof SingleEventEmitterImpl;

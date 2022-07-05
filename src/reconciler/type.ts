@@ -92,6 +92,10 @@ export type ReconcilerRTHostConfig = {
         node: Instance
     ): void
 
+    getPublicInstance?(
+        node: Instance
+    ): any
+
     commitTextUpdate?(
         textInstance: TextInstance,
         oldText: string,

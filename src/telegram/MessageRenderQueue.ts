@@ -1,5 +1,4 @@
 import RTMessageElement = ReactTelegram.RTMessageElement;
-import RTMessageRenderStatus = ReactTelegram.RTMessageRenderStatus;
 
 export type QueueAction =
     | "Create"
@@ -7,12 +6,23 @@ export type QueueAction =
     | "Remove"
 ;
 
+
+const deferredRun = <T>(fn: () => Promise<T>): Promise<T> => {
+    return new Promise(resolve => {
+        setImmediate(async () => {
+            const result = await fn();
+            resolve(result);
+        })
+    });
+}
+
 export const createMessageRenderQueue = () => {
 
     const queueMap = new WeakMap<RTMessageElement, {
         current?: {
             action: QueueAction,
-            callback: () => Promise<void>
+            callback: () => Promise<void>,
+            isRunning: boolean;
         }
         queued?: {
             action: QueueAction,
@@ -21,12 +31,14 @@ export const createMessageRenderQueue = () => {
 
     }>();
 
+
     const processQueueAction = async (message: RTMessageElement) => {
         const descriptor = queueMap.get(message);
 
         while (descriptor.current !== undefined) {
+            descriptor.current.isRunning = true;
             await descriptor.current.callback();
-            descriptor.current = descriptor.queued;
+            descriptor.current = descriptor.queued ? { ...descriptor.queued, isRunning: false } : undefined;
             descriptor.queued = undefined;
         }
     }
@@ -49,9 +61,10 @@ export const createMessageRenderQueue = () => {
 
         const queuedAction = getQueuedAction(message);
 
-        if (queuedAction === undefined) {
-            queueDescriptor.current = {action, callback};
-            processQueueAction(message);
+        if (queueDescriptor.current === undefined || (!queueDescriptor.current.isRunning && queueDescriptor.queued === undefined)) {
+            const wasEmpty = queueDescriptor.current === undefined;
+            queueDescriptor.current = {action, callback, isRunning: false};
+            if (wasEmpty) deferredRun(() => processQueueAction(message));
         } else {
             if (queuedAction === "Remove") return;
             queueDescriptor.queued = {action, callback};

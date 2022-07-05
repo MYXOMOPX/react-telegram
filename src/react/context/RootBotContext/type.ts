@@ -1,9 +1,9 @@
 import {ReactTelegramBot} from "../../../telegram/type";
-import ITypedSubscriptionable = ReactTelegram.ITypedSubscriptionable;
-import RootEvents = ReactTelegram.RootEvents;
+import ChatID = ReactTelegram.ChatID;
 
 export interface RootBotContextType {
     reactBot: ReactTelegramBot,
+    chatId: ChatID;
     root: ReactTelegram.RTRootElement,
-    events: ITypedSubscriptionable<RootEvents>
+    rtDocument: ReactTelegram.RTDocument
 }

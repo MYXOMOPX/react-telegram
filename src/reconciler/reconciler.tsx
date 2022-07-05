@@ -162,17 +162,23 @@ export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
             renderFn(rootContainer, rtDocument.getMessagesToRender(rootContainer))
         },
 
+        // Method for ref attribute |||| ref={}
+        getPublicInstance(instance) {
+            return instance
+        },
+
         commitMount(domElement, type, newProps) {},
     };
 
     const render = (jsx: React.ReactNode, chatId: ChatID, ctxValue: Partial<RootBotContextType>) => {
-        const root = rtDocument.instantiateRoot(chatId, ctxValue.events);
+        const root = rtDocument.instantiateRoot(chatId);
         const reconciler = Reconciler(hostConfig);
         const container = reconciler.createContainer(root, false, false);
 
         const fullCtxVal: RootBotContextType = {
             ...ctxValue,
-            root: root
+            root,
+            chatId
         } as RootBotContextType;
 
         const jsxWithContext = (

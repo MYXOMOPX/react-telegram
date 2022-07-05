@@ -4,11 +4,15 @@ import RTDocument = ReactTelegram.RTDocument;
 import RTElement = ReactTelegram.RTElement;
 import RTMessageElement = ReactTelegram.RTMessageElement;
 import RTRootElement = ReactTelegram.RTRootElement;
+import {TypedSingleEventEmitter} from "../../util/TypedEventEmitter";
 
 
 export const createRTDocument = (): RTDocument => {
 
     const rtDocument = {} as RTDocument;
+    rtDocument.callbackQueryEvents = new TypedSingleEventEmitter();
+    rtDocument.messageEvents = new TypedSingleEventEmitter();
+    rtDocument.ownMessageEvents = new TypedSingleEventEmitter();
 
     const rootElements: Array<RTRootElement> = []
 
@@ -39,7 +43,6 @@ export const createRTDocument = (): RTDocument => {
             (parentInstance as RTRootElement).messagesToRemove.push(msg);
             msg.isRemoved = true;
         }
-        console.log("REMOVE CHILD",parentInstance,child);
 
     }
 
@@ -96,11 +99,10 @@ export const createRTDocument = (): RTDocument => {
         return root.children as RTMessageElement[]
     }
 
-    rtDocument.instantiateRoot = (chatId, events) => {
+    rtDocument.instantiateRoot = (chatId) => {
         const element = rtDocument.createElement( "root");
         const rootEl = element as RTRootElement;
         rootEl.chatId = chatId;
-        rootEl.events = events;
         rootEl.messagesToRemove = [];
         rootElements.push(rootEl);
         return rootEl;
@@ -125,6 +127,27 @@ export const createRTDocument = (): RTDocument => {
         const index = rootElements.indexOf(root);
         rootElements.splice(index, 1);
     }
+
+    rtDocument.emitCallbackQueryEvent = (event) => {
+        const query = event.query;
+        const msg = query.message;
+        const eventName = `${msg.chat.id}:${msg.message_id}:${query.data}`
+        console.log("EMIT",eventName);
+        rtDocument.callbackQueryEvents.emit(eventName, event);
+    }
+
+    rtDocument.emitMessageEvent = (event) => {
+        const msg = event.message;
+        const eventName = `${msg.chat.id}`;
+        rtDocument.messageEvents.emit(eventName, event);
+    }
+
+    rtDocument.emitOwnMessageEvent = (event) => {
+        const uuid = event.messageUuid
+        const eventName = String(uuid);
+        rtDocument.ownMessageEvents.emit(eventName, event);
+    }
+
 
     return rtDocument;
 }

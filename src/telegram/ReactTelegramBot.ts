@@ -5,12 +5,9 @@ import {ReactTelegramBot} from "./type";
 import {createRTDocument} from "../host/document/RTDocument";
 import RTMessageElement = ReactTelegram.RTMessageElement;
 import RTRootElement = ReactTelegram.RTRootElement;
-import {TypedEventEmitter} from "../util/TypedEventEmitter";
-import RootEvents = ReactTelegram.RootEvents;
 import ChatID = ReactTelegram.ChatID;
-import {CallbackQueryEvent} from "../../type/events";
-import {TypedEventEmitterImpl} from "../../type/event-emitter";
 import {createMessageRenderQueue} from "./MessageRenderQueue";
+import {CallbackQueryAnswer, RTCallbackQueryEvent} from "../../type/events";
 
 
 export const createReactTelegramBot = (apiBot: TelegramBot) => {
@@ -29,6 +26,10 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
                 reply_markup: msgForSend.reply_markup
             });
             message.messageId = msg.message_id;
+            rtDocument.emitOwnMessageEvent({
+                message: msg,
+                messageUuid: message.uuid
+            })
             // emit event about messageId changed
         }
         message.rerenderStatus = "None";
@@ -59,7 +60,6 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
 
 
     const onRender = async (root: RTRootElement, renderDescriptor: ReactTelegram.MessagesToRender) => {
-        console.log("ON RENDER", renderDescriptor)
         if (renderDescriptor.created && renderDescriptor.created.length > 0) {
             renderDescriptor.created.forEach(it => {
                 messageQueue.addToQueue(it, "Create", () => renderMessageSend(root, it))
@@ -71,7 +71,6 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
             });
         }
         if (renderDescriptor.removed && renderDescriptor.removed.length > 0) {
-            console.log("REMOVE",renderDescriptor.removed)
             renderDescriptor.removed.forEach(it => {
                 messageQueue.addToQueue(it, "Remove", () => renderMessageRemove(root, it))
             });
@@ -81,19 +80,28 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
 
 
     apiBot.on("callback_query", (query) => {
-        const root = rtDocument.getRootsByMessage(query.message.chat.id, query.message.message_id);
-        const event: CallbackQueryEvent = {
+        let isAlreadyAnswered = false;
+        const answerQuery = (answer: string | CallbackQueryAnswer | undefined) => {
+            if (isAlreadyAnswered) return;
+            isAlreadyAnswered = true;
+            const answerOpts = {} as any;
+            if (typeof answer === "string") answerOpts.text = answer;
+            else if (typeof answer !== "undefined") {
+                answerOpts.text = answer.text;
+                answerOpts.show_alert = answer.showAlert;
+            }
+            apiBot.answerCallbackQuery(query.id, answerOpts)
+        }
+
+        const event: RTCallbackQueryEvent = {
             query,
             handled: false,
+            answer: answerQuery
         }
-        if (root) {
-            (root.events as TypedEventEmitterImpl<RootEvents>).emit("callbackQuery", event);
-        }
-        if (event.handled) {
-            apiBot.answerCallbackQuery(query.id, {
-                text: event?.answer?.text,
-                show_alert: event?.answer?.showAlert
-            });
+        rtDocument.emitCallbackQueryEvent(event);
+        console.log("EVENT AFTER LISTENERS",event);
+        if (event.handled && !isAlreadyAnswered) {
+            answerQuery(undefined);
         }
         // emit other event (NOT IN ROOT)
     })
@@ -104,8 +112,7 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
     });
 
     reactBot.sendJSX = (node: React.ReactNode, chatId: ChatID) => {
-        const events = new TypedEventEmitter();
-        rtReconciler.render(node,  chatId,{reactBot, events });
+        rtReconciler.render(node,  chatId,{reactBot, rtDocument });
     }
 
     return reactBot;

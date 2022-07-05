@@ -1,6 +1,9 @@
+
 declare module ReactTelegram {
-    type RootEvents = import("./events").RootEvents;
-    type ITypedSubscriptionable<T> = import("./event-emitter").ITypedSubscriptionable<T>;
+    type SingleEventEmitterImpl<T> = import("./event-emitter").SingleEventEmitterImpl<T>;
+    type RTCallbackQueryEvent = import("./events").RTCallbackQueryEvent;
+    type RTMessageEvent = import("./events").RTMessageEvent;
+    type RTOwnMessageEvent = import("./events").RTOwnMessageEvent;
 
     // ### ################## ### //
     // ### NODES AND ELEMENTS ### //
@@ -37,7 +40,7 @@ declare module ReactTelegram {
     }
 
     interface RTDocument {
-        instantiateRoot: (chatId: ChatID, events: ITypedSubscriptionable<RootEvents>) => RTRootElement;
+        instantiateRoot: (chatId: ChatID) => RTRootElement;
         getRootByUUID: (uuid: string) => RTRootElement | null;
         destroyRoot: (root: RTRootElement) => void;
         getRootsByMessage: (chatId: ChatID, messageId: number) => RTRootElement | null;
@@ -54,8 +57,17 @@ declare module ReactTelegram {
         updateElement: (element: RTElement, data: any) => void;
         updateTextInstance: (rawTextNode: RawTextNode, text: string) => void;
 
-        createElement: (name: ReactTelegram.ElementName, data?: any) => RTElement
+        createElement: (name: ElementName, data?: any) => RTElement
         createTextNode: (value: string) => RawTextNode
+
+        // EVENTS
+        callbackQueryEvents: SingleEventEmitterImpl<RTCallbackQueryEvent> //
+        messageEvents: SingleEventEmitterImpl<RTMessageEvent> // chatId
+        ownMessageEvents: SingleEventEmitterImpl<RTOwnMessageEvent> // messageUuid
+
+        emitCallbackQueryEvent: (event: RTCallbackQueryEvent) => void;
+        emitMessageEvent: (event: RTMessageEvent) => void;
+        emitOwnMessageEvent: (event: RTOwnMessageEvent) => void;
     }
 
     type ChatID = string | number;
@@ -77,7 +89,6 @@ declare module ReactTelegram {
         uuid: string;
         chatId: ChatID;
         messagesToRemove: Array<RTMessageElement>;
-        events: ITypedSubscriptionable<RootEvents>
     }
     type RTFormatElement = RTElement<"format", {
         bold?: boolean;

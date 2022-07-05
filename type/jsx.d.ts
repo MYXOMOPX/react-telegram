@@ -1,6 +1,10 @@
-declare module JSX {
 
-    type JSXElementData<T extends ReactTelegram.RTElement> = React.PropsWithChildren<ReactTelegram.RTElementData<T>>
+declare module JSX {
+    type KeyAttributes = import("react").Attributes
+    type RefAttributes<T> = import("react").RefAttributes<T>
+
+    type JSXElementData<T extends ReactTelegram.RTElement> =
+        React.PropsWithChildren<ReactTelegram.RTElementData<T>> & KeyAttributes  & RefAttributes<T>
 
     interface IntrinsicElements {
         "root": JSXElementData<ReactTelegram.RTRootElement>,
