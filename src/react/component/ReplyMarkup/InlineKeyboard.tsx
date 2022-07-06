@@ -4,7 +4,7 @@ import {FC, PropsWithChildren, useContext, useRef} from "react";
 import { v4 as uuidv4 } from 'uuid';
 import {RootBotContext} from "../../context/RootBotContext/RootBotContext";
 import {useDocumentSubscribe} from "../../hook";
-import {getEventNameForQueryButton} from "../../../util";
+import {getEventChannelForQueryButton} from "../../../util";
 import {MessageContext} from "../message/Message";
 import {CallbackQueryAnswer, CallbackQueryAnswerFunction} from "../../../../type/events";
 
@@ -43,13 +43,13 @@ export const InlineClickButton: FC<InlineClickButtonProps> = (props) => {
     const {onClick, text} = props;
 
     // ToDo useLatestCallback
-    const { rtDocument, chatId } = useContext(RootBotContext);
+    const { chatId } = useContext(RootBotContext);
     const { messageId } = useContext(MessageContext)
     const callbackDataRef = useRef(uuidv4());
 
     useDocumentSubscribe(
-        rtDocument.callbackQueryEvents,
-        getEventNameForQueryButton(chatId, messageId, callbackDataRef.current),
+        "callbackQuery",
+        getEventChannelForQueryButton(chatId, messageId, callbackDataRef.current),
         async (event) => {
             onClick(event.answer);
             event.handled = true;

@@ -14,18 +14,30 @@ export interface RTCallbackQueryEvent {
     handled: boolean;
 }
 
-/**
- * eventName on emit: chatId
- */
+export interface RTReplyMessageEvent {
+    message: import("node-telegram-bot-api").Message,
+    handled: any, // TODO
+}
+
+export interface RTOwnMessageEvent {
+    message: import("node-telegram-bot-api").Message,
+    messageUuid: string;
+}
+
+export interface RTMessageListenerInterruptedEvent {
+    uuid: string;
+}
+
+export type RTMessageEventCallback = (event: RTMessageEvent) =>  void;
+
 export interface RTMessageEvent {
     message: import("node-telegram-bot-api").Message,
     handled: any, // TODO
 }
 
-/**
- * eventName on emit: messageUUID
- */
-export interface RTOwnMessageEvent {
-    message: import("node-telegram-bot-api").Message,
-    messageUuid: string;
+export interface RTDocumentEvents {
+    "callbackQuery": (event: RTCallbackQueryEvent) => void; // channels: ${msg.chat.id}:${msg.message_id}:${query.data}
+    "ownMessage": (event: RTOwnMessageEvent) => void; // channels: messageUuid
+    "replyMessage": (event: RTReplyMessageEvent) => void; // channels: ${chatId}:${messageId}
+    "messageListenerInterrupted": (event: RTMessageListenerInterruptedEvent) => void; // channels: ${chatId}
 }

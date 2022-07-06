@@ -7,7 +7,7 @@ import RTMessageElement = ReactTelegram.RTMessageElement;
 import RTRootElement = ReactTelegram.RTRootElement;
 import ChatID = ReactTelegram.ChatID;
 import {createMessageRenderQueue} from "./MessageRenderQueue";
-import {CallbackQueryAnswer, RTCallbackQueryEvent} from "../../type/events";
+import {CallbackQueryAnswer, RTCallbackQueryEvent, RTReplyMessageEvent} from "../../type/events";
 import {TypedEventEmitter} from "../util";
 
 
@@ -29,11 +29,10 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
                 reply_markup: msgForSend.reply_markup
             });
             message.messageId = msg.message_id;
-            rtDocument.emitOwnMessageEvent({
+            rtDocument.events.emit("ownMessage", message.uuid, {
                 message: msg,
                 messageUuid: message.uuid
             })
-            // emit event about messageId changed
         }
         message.rerenderStatus = "None";
     }
@@ -101,7 +100,8 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
             handled: false,
             answer: answerQuery
         }
-        rtDocument.emitCallbackQueryEvent(event);
+        const msg = query.message;
+        rtDocument.events.emit("callbackQuery", `${msg.chat.id}:${msg.message_id}:${query.data}`, event);
         if (event.handled) {
             if (!isAlreadyAnswered) answerQuery(undefined);
         } else {
@@ -110,12 +110,26 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
     })
 
     apiBot.on("message", (message, metadata) => {
+        const replyToMsg = message.reply_to_message
+        console.log("IN BOT GOT",message.text);
+        if (replyToMsg) {
+            const replyEvent: RTReplyMessageEvent = {
+                message: message,
+                handled: false
+            }
+            rtDocument.events.emit("replyMessage", `${replyToMsg.chat.id}:${replyToMsg.message_id}`, replyEvent);
+            if (replyEvent.handled) return;
+        }
+        console.log("NOT REPLY");
+
         const event = {message, handled: false};
-        rtDocument.messageEvents.emit(String(message.chat.id), event);
+        rtDocument.emitMessageEvent(message.chat.id, event);
+        console.log("NOT HANDLED")
         if (!event.handled) {
             reactBot.events.emit("message", message, metadata)
         }
     })
+
 
     const rtReconciler = createRTReconciler({
         render: onRender,

@@ -4,15 +4,16 @@ import RTDocument = ReactTelegram.RTDocument;
 import RTElement = ReactTelegram.RTElement;
 import RTMessageElement = ReactTelegram.RTMessageElement;
 import RTRootElement = ReactTelegram.RTRootElement;
-import {TypedSingleEventEmitter} from "../../util/TypedEventEmitter";
+import {createChannelEventEmitter} from "../../util/ChannelEventEmitter";
+import {createMessageEventManager} from "./messageEventManager";
 
 
 export const createRTDocument = (): RTDocument => {
 
     const rtDocument = {} as RTDocument;
-    rtDocument.callbackQueryEvents = new TypedSingleEventEmitter();
-    rtDocument.messageEvents = new TypedSingleEventEmitter();
-    rtDocument.ownMessageEvents = new TypedSingleEventEmitter();
+    rtDocument.events = createChannelEventEmitter();
+    const messageEventManager = createMessageEventManager(rtDocument.events);;
+
 
     const rootElements: Array<RTRootElement> = []
 
@@ -122,32 +123,16 @@ export const createRTDocument = (): RTDocument => {
         ;
     }
 
+    // events
+    rtDocument.listenForMessage = messageEventManager.listen;
+    rtDocument.stopListenForMessage = messageEventManager.stopListen;
+    rtDocument.emitMessageEvent = messageEventManager.emit;
+
     rtDocument.destroyRoot = (root) => {
         // ToDo react.unmount?
         const index = rootElements.indexOf(root);
         rootElements.splice(index, 1);
     }
-
-    rtDocument.emitCallbackQueryEvent = (event) => {
-        const query = event.query;
-        const msg = query.message;
-        const eventName = `${msg.chat.id}:${msg.message_id}:${query.data}`
-        console.log("EMIT",eventName);
-        rtDocument.callbackQueryEvents.emit(eventName, event);
-    }
-
-    rtDocument.emitMessageEvent = (event) => {
-        const msg = event.message;
-        const eventName = `${msg.chat.id}`;
-        rtDocument.messageEvents.emit(eventName, event);
-    }
-
-    rtDocument.emitOwnMessageEvent = (event) => {
-        const uuid = event.messageUuid
-        const eventName = String(uuid);
-        rtDocument.ownMessageEvents.emit(eventName, event);
-    }
-
 
     return rtDocument;
 }

@@ -9,11 +9,10 @@ export const Message: FC<MessageProps> = (props) => {
     const {children} = props;
 
     const [msg, setMsg] = useState<RTMessageElement|undefined>();
-    const { rtDocument } = useContext(RootBotContext);
     const [value, setValue] = useState<MessageContextType>({isSent: false});
 
     useDocumentSubscribe(
-        rtDocument.ownMessageEvents,
+        "ownMessage",
         msg?.uuid,
         (event) => {
             setValue({

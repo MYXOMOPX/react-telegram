@@ -1,2 +1,2 @@
 export * from "./TypedEventEmitter";
-export * from "./event-names"
+export * from "./event-channels"

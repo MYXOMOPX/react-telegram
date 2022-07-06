@@ -1,9 +1,6 @@
-
 declare module ReactTelegram {
-    type SingleEventEmitterImpl<T> = import("./event-emitter").SingleEventEmitterImpl<T>;
-    type RTCallbackQueryEvent = import("./events").RTCallbackQueryEvent;
-    type RTMessageEvent = import("./events").RTMessageEvent;
-    type RTOwnMessageEvent = import("./events").RTOwnMessageEvent;
+    type IChannelEventEmitter<T> = import("./channel-event-emitter").IChannelEventEmitter<T>
+    type RTDocumentEvents = import("./events").RTDocumentEvents;
 
     // ### ################## ### //
     // ### NODES AND ELEMENTS ### //
@@ -61,13 +58,12 @@ declare module ReactTelegram {
         createTextNode: (value: string) => RawTextNode
 
         // EVENTS
-        callbackQueryEvents: SingleEventEmitterImpl<RTCallbackQueryEvent> //
-        messageEvents: SingleEventEmitterImpl<RTMessageEvent> // chatId
-        ownMessageEvents: SingleEventEmitterImpl<RTOwnMessageEvent> // messageUuid
+        events: IChannelEventEmitter<RTDocumentEvents>
 
-        emitCallbackQueryEvent: (event: RTCallbackQueryEvent) => void;
-        emitMessageEvent: (event: RTMessageEvent) => void;
-        emitOwnMessageEvent: (event: RTOwnMessageEvent) => void;
+        listenForMessage: (chatId: ChatID, uuid: string, callback: import('./events').RTMessageEventCallback) => void;
+        stopListenForMessage: (chatId: ChatID, uuid: string) => void;
+        emitMessageEvent: (chatId: ChatID, event: import('./events').RTMessageEvent) => void;
+
     }
 
     type ChatID = string | number;
