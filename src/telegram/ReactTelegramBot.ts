@@ -9,6 +9,7 @@ import ChatID = ReactTelegram.ChatID;
 import {createMessageRenderQueue} from "./MessageRenderQueue";
 import {CallbackQueryAnswer, RTCallbackQueryEvent, RTReplyMessageEvent} from "../../type/events";
 import {TypedEventEmitter} from "../util";
+import {createTelegramApiRenderer} from "./TelegramAPIRenderer";
 
 
 export const createReactTelegramBot = (apiBot: TelegramBot) => {
@@ -16,65 +17,32 @@ export const createReactTelegramBot = (apiBot: TelegramBot) => {
     const reactBot = apiBot as ReactTelegramBot;
     const rtDocument = createRTDocument();
     const messageQueue = createMessageRenderQueue();
+    const telegramAPIRenderer = createTelegramApiRenderer(reactBot, rtDocument, messageQueue);
 
     reactBot.events = new TypedEventEmitter();
-
-    const renderMessageSend = async (root: RTRootElement, message: RTMessageElement) => {
-        message.rerenderStatus = "Parsing";
-        const msgForSend = await parseMessageForSend(message);
-        message.rerenderStatus = "Sending";
-        if (msgForSend.type === "text") {
-            const msg = await apiBot.sendMessage(root.chatId, msgForSend.text, {
-                parse_mode: "HTML",
-                reply_markup: msgForSend.reply_markup
-            });
-            message.messageId = msg.message_id;
-            rtDocument.events.emit("ownMessage", message.uuid, {
-                message: msg,
-                messageUuid: message.uuid
-            })
-        }
-        message.rerenderStatus = "None";
-    }
-
-    const renderMessageUpdate = async (root: RTRootElement, message: RTMessageElement) => {
-        message.rerenderStatus = "Parsing";
-        const msgForUpdate = await parseMessageForUpdate(message);
-        message.rerenderStatus = "Sending";
-        if (msgForUpdate.type === "text") {
-            await apiBot.editMessageText(msgForUpdate.text, {
-                parse_mode: "HTML",
-                chat_id: root.chatId,
-                message_id: message.messageId,
-                reply_markup: msgForUpdate.reply_markup
-            })
-        }
-        message.rerenderStatus = "None";
-    }
-
-    // Here will be problem, if message removed from Document in time when we sending it.
-    const renderMessageRemove = async (root: RTRootElement, message: RTMessageElement) => {
-        if (!message.messageId) return;
-        message.rerenderStatus = "Removing"
-        await apiBot.deleteMessage(root.chatId, String(message.messageId))
-        message.rerenderStatus = "None"
-    }
 
 
     const onRender = async (root: RTRootElement, renderDescriptor: ReactTelegram.MessagesToRender) => {
         if (renderDescriptor.created && renderDescriptor.created.length > 0) {
             renderDescriptor.created.forEach(it => {
-                messageQueue.addToQueue(it, "Create", () => renderMessageSend(root, it))
+                if (messageQueue.getCurrentAction(it) === "Create" && messageQueue.isExecuting(it)) {
+                    console.log("S-UPDATE",it.uuid);
+                    messageQueue.addToQueue(it, "Update", () => telegramAPIRenderer.render_Update(root, it))
+                } else {
+                    console.log("SENDING",it.uuid);
+                    messageQueue.addToQueue(it, "Create", () => telegramAPIRenderer.render_Send(root, it))
+                }
             });
         }
         if (renderDescriptor.changed && renderDescriptor.changed.length > 0) {
             renderDescriptor.changed.forEach(it => {
-                messageQueue.addToQueue(it, "Update", () => renderMessageUpdate(root, it))
+                console.log("N-UPDATE",it.uuid)
+                messageQueue.addToQueue(it, "Update", () => telegramAPIRenderer.render_Update(root, it))
             });
         }
         if (renderDescriptor.removed && renderDescriptor.removed.length > 0) {
             renderDescriptor.removed.forEach(it => {
-                messageQueue.addToQueue(it, "Remove", () => renderMessageRemove(root, it))
+                messageQueue.addToQueue(it, "Remove", () => telegramAPIRenderer.render_Remove(root, it))
             });
             root.messagesToRemove = [];
         }

@@ -1,70 +1,36 @@
-import {FC, useCallback, useEffect, useMemo, useState} from "react";
-import {Format, InlineButton, InlineClickButton, InlineKeyboard, InlineKeyboardRow, Message} from "../react/component";
-import TelegramBot from "node-telegram-bot-api";
-import {useMessage} from "../react/hook";
-import {useReply} from "../react/hook/useReply";
+import {FC, useCallback, useState} from "react";
+import { v4 as uuidv4 } from 'uuid';
+import {ToDoListHeader} from "./ToDoList/ToDoListHeader";
+import {ToDoListItem} from "./ToDoList/ToDoListItem";
 
 interface ReactAppProps {
 }
 
 export const ReactApp: FC<ReactAppProps> = () => {
 
-    const [count, setCount] = useState(1);
-    const [name, setName] = useState("");
-
-    const [startListen, listening] = useMessage((msg, bot, stopListen) => {
-        setName(msg.text);
-        stopListen();
-        return true;
-    }, false)
+    const [tasks, setTasks] = useState<string[]>([]);
 
 
-    const plus = useCallback(() => {
-        setCount(c => c+1);
+    const addTask = useCallback(() => {
+        setTasks(arr => [...arr, uuidv4()])
     }, []);
-    const minus = useCallback(() => {
-        setCount(c => c-1);
-    }, []);
+
+    const removeTask = useCallback((uuid: string) => {
+        setTasks(v => v.filter(it => it !== uuid))
+    }, [])
 
     return (
         <>
-            <Message>
-                <Format bold>Count:</Format> {count}
-                <Format newLine bold>Listening:</Format> {listening ? "Yes" : "No"}
-                {name ?
-                    <Format newLine>
-                        <Format bold>Your name is:</Format> {name}
-                    </Format>
-                    :
-                    ""
-                }
-                <ReplyBoard/>
-                <InlineKeyboard>
-                    <InlineKeyboardRow>
-                        <InlineClickButton text={"+"} onClick={plus} />
-                        <InlineClickButton text={"-"} onClick={minus} />
-                    </InlineKeyboardRow>
-                    <InlineKeyboardRow>
-                        <InlineClickButton text={"ENTER NAME"} onClick={startListen} />
-                    </InlineKeyboardRow>
-                </InlineKeyboard>
-            </Message>
+            <ToDoListHeader
+                count={tasks.length}
+                onAdd={addTask}
+            />
+            {tasks.map(it => {
+                const onRemove = () => removeTask(it);
+                return (
+                    <ToDoListItem key={it} uuid={it} onRemove={onRemove}/>
+                )
+            })}
         </>
-    )
-}
-
-const ReplyBoard: FC = () => {
-    const [lastReply, setLastReply] = useState<string|undefined>()
-
-    useReply((msg) => {
-        setLastReply(msg.text);
-    })
-
-    if (!lastReply) return;
-
-    return (
-        <Format newLine>
-            <Format bold>Your last reply is:</Format> {lastReply}
-        </Format>
     )
 }

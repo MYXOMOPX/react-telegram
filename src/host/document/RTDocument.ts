@@ -44,7 +44,6 @@ export const createRTDocument = (): RTDocument => {
             (parentInstance as RTRootElement).messagesToRemove.push(msg);
             msg.isRemoved = true;
         }
-
     }
 
     rtDocument.detachInstance = (child: RTNode) => {

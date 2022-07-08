@@ -35,7 +35,7 @@ export const InlineButton: FC<InlineButtonProps> = (props) => {
 }
 
 type InlineClickButtonProps = {
-    text?: string;
+    text: string;
     onClick: (answer: CallbackQueryAnswerFunction) => void;
 }
 

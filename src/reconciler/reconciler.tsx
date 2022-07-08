@@ -78,15 +78,29 @@ export const createRTReconciler = (opts: CreateRTReconcilerOpts) => {
          * вершинах изменившегося поддерева (кроме текстовых) во время рендер-фазы.
          * */
         prepareUpdate(instance, type, oldData, newData) {
-            return newData;
+            const changes = Object.create(null) as any;
+            const oldKeys = Object.keys(oldData);
+            const newKeys = Object.keys(newData);
+            for (let key of oldKeys) {
+                if (key === "children") continue;
+                if (newKeys.indexOf(key) < 0) changes[key] = undefined
+            }
+            for (let key of newKeys) {
+                if (key === "children") continue;
+                if (oldData[key] !== newData[key]) changes[key] = newData[key]
+            }
+            if (Object.keys(changes).length > 0) return changes;
+            return null;
         },
 
         /*
          * Вносит изменения, найденные ранее. Вызывается в фазе коммита
          * на всех элементах, которые имеют updatePayload
          * */
-        commitUpdate(domElement, updatePayload, type, oldProps, newProps) {
-            // ToDo ?;
+        commitUpdate(element, updatePayload, type, oldProps, newProps) {
+            // We don't need to *update* data, we can just set new one, because we will parse again anyway
+            // But if updatePayload is null (calculated above) - it will not be called
+            rtDocument.updateElement(element, newProps);
         },
 
         // Вставка узлов
